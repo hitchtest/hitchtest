@@ -1,0 +1,3 @@
+[console_scripts]
+test = hitchtest:commandline.run
+
