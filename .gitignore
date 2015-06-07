@@ -4,6 +4,5 @@ setup.cfg
 setup.cfg
 build/
 dist/
-docs/html/
 venv/
-hitch.egg-info/
+hitchtest.egg-info/
