@@ -6,7 +6,7 @@ import {{ test.engine_import() }}
 
 class {{ test.camel_case_name() }}TestCase({{ test.engine }}):
     {% if test.description %}"""{{ test.description }}"""{% endif %}
-    test_vars = {{ VARS }}
+    settings = {{ settings }}
     preconditions = {{ test.preconditions }}
     
     def test_{{ test.underscore_case_name() }}(self):

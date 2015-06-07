@@ -50,11 +50,11 @@ class Module(object):
             for test in self.tests:
                 test.filename = path.join(self.compiled_dirname, self.name, "test_{}.py".format(test.name))
                 with open(test.filename, "w") as output_handle:
-                    output_handle.write(template.render(test=self.test, VARS=self.dict_vars, engine_folder=self.engine_folder))
+                    output_handle.write(template.render(test=self.test, settings=self.dict_vars, engine_folder=self.engine_folder))
         else:
             self.test_filename = path.join(self.compiled_dirname, "test_{}.py".format(self.name))
             with open(self.test_filename, "w") as output_handle:
-                output_handle.write(template.render(test=self.test, VARS=self.dict_vars, engine_folder=self.engine_folder))
+                output_handle.write(template.render(test=self.test, settings=self.dict_vars, engine_folder=self.engine_folder))
 
     def run_python(self, python):
         if self.multiple_tests:
