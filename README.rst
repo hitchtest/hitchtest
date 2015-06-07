@@ -1,18 +1,41 @@
 HitchTest
 =========
 
-HitchTest is a part of the hitch testing framework which compiles
-YAML and jinja2 to python unittest.
+HitchTest is a part of the hitch testing framework which compiles and runs
+YAML (and optionally jinja2) tests like this::
 
-Why?
-====
+  - engine: engine.DjangoReminderTestExecutionEngine
+    description: Sign up, create reminder and wait for email reminder to arrive.
+    scenario:
+      - Load website
+      - Click: Register
+      - Fill form:
+          Username: django
+          Email: django@reinhardt.com
+          Password1: jazzguitar
+          Password2: jazzguitar
+      - Click: Create
+      - Create reminder:
+          Description: Remind me about upcoming gig.
+          Days from now: 30
+      - Wait for email:
+          Containing: Confirm E-mail Address
+      - Confirm emails sent: 1
+      - Time travel:
+          Days: 30
+      - Wait for email:
+          Containing: Remind me about upcoming gig.
 
-* Individual test cases should be declarative.
-* The engine that runs them should be imperative.
 
-YAML provides an easy way to provide a *less* powerful language to
-write test scenarios in that can be easily compiled to a more powerful
-language (python). This makes reading, writing, parsing and adding
-features to test cases much easier.
+Why YAML + Jinja2?
+==================
 
-Theoretically, the YAML should be readable and writable by non-programmers.
+To more easily maintain separation of concerns, individual test scripts
+should be declarative. This can be enforced by ensuring that they are
+written in a purely declarative language - hence YAML.
+
+This also makes reading, writing, adding metadata to and and parsing
+test cases much easier.
+
+Combining YAML with jinja2 gives you the power to deduplicate
+test case code while still maintaining comprehensibility and simplicity.
