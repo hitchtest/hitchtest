@@ -88,12 +88,13 @@ class Module(object):
                         failure = True
                         break
 
-            try:
-                engine.tearDown()
-            except Exception as e:
-                tb_printer()
-                sys.stderr.write("""WARNING: Exception occurred in "{}" ({}) tear down.\n""".format(test.name, self.filename))
-                sys.exit(1)
+            if not failure:
+                try:
+                    engine.tearDown()
+                except Exception as e:
+                    tb_printer()
+                    sys.stderr.write("""WARNING: Exception occurred in "{}" ({}) tear down.\n""".format(test.name, self.filename))
+                    sys.exit(1)
 
         sys.exit(1 if failure else 0)
 

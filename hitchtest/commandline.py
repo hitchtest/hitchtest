@@ -22,7 +22,7 @@ def cli(filename, yaml, settings, extra):
             with open(settings) as settingsfile_handle:
                 dict_vars = pyyaml.load(settingsfile_handle.read())
         else:
-            if path.join(path.dirname(filename), "settings.yml"):
+            if path.exists(path.join(path.dirname(filename), "settings.yml")):
                 with open(path.join(path.dirname(filename), "settings.yml")) as settingsfile_handle:
                     dict_vars = pyyaml.load(settingsfile_handle.read())
             else:
