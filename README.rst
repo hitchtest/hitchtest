@@ -34,6 +34,17 @@ YAML (and optionally jinja2) tests like this::
     {% endblock %}
 
 
+There is no magic here. Each of these steps calls a python method,
+defined by you in the specified execution engine class, like so:
+
+.. code-block:: python
+
+    def click(self, on):
+        """Click on HTML id."""
+        self.driver.find_element_by_id(on).click()
+
+
+
 Features
 ========
 
