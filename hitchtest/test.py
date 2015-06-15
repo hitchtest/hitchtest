@@ -1,14 +1,25 @@
-import sys
+from IPython.core import ultratb
+from hitch_stacktrace import HitchStacktrace, TestPosition
 from scenario import Scenario
+from result import Result
+from os import path
+import inspect
 import utils
+import time
+import sys
+import imp
+import os
+
 
 class Test(object):
-    def __init__(self, yaml_test, title):
+    def __init__(self, yaml_test, settings, filename, title):
+        self.settings = settings
+        self.filename = filename
         self.name = yaml_test['name'] if 'name' in yaml_test else title
         self.engine = yaml_test['engine']
         self.description = yaml_test['description'] if 'description' in yaml_test else None
         self.preconditions = yaml_test['preconditions'] if 'preconditions' in yaml_test else None
-        self.bugs = yaml_test['bugs'] if 'bugs' in yaml_test else None
+        self.tags = yaml_test['tags'] if 'tags' in yaml_test else None
         self.features = yaml_test['features'] if 'features' in yaml_test else None
         self.scenario = Scenario(yaml_test['scenario'])
 
@@ -17,11 +28,67 @@ class Test(object):
         if self.name[0].isdigit():
             raise RuntimeError("ERROR : Test names cannot start with a digit.")
 
-    def engine_import(self):
-        return self.engine.split(".")[0]
+    def to_dict(self):
+        return {
+            "filename": self.filename,
+            "name": self.name,
+            "engine": self.engine,
+            "preconditions": self.preconditions,
+            "description": self.description,
+            "tags": self.tags,
+            "features": self.features,
+            "scenario": self.scenario.to_dict(),
+        }
 
-    def camel_case_name(self):
-        return utils.to_camel_case(self.name)
+    def run(self):
+        start_time = time.time()
 
-    def underscore_case_name(self):
-        return utils.to_underscore_style(self.name)
+        module_source = path.abspath(path.join(self.settings['engine_folder'], self.engine.split(":")[0]))
+        engine_class_name = self.engine.split(":")[1]
+        engine_module = imp.load_source("engine", module_source)
+        engine_class = [x for x in inspect.getmembers(engine_module) if x[0] == engine_class_name][0][1]
+        engine = engine_class(self.settings, self.preconditions)
+        engine.name = self.name
+        engine._test = self
+        failure = False
+        tb_printer=ultratb.VerboseTB()
+
+        sys.stdout.write("RUNNING TEST {}\n".format(self.name))
+        sys.stdout.flush()
+        stacktrace = None
+
+        try:
+            engine.set_up()
+        except Exception as e:
+            stacktrace = HitchStacktrace(self, TestPosition.SETUP)
+            failure = True
+
+        if not failure:
+            for step in self.scenario.steps:
+                try:
+                    step.run(engine)
+                except Exception as e:
+                    stacktrace = HitchStacktrace(self, TestPosition.STEP, step=step)
+                    failure = True
+                    break
+
+        if failure:
+            if hasattr(engine, "on_failure"):
+                try:
+                    engine.on_failure(stacktrace)
+                except Exception as e:
+                    stacktrace = HitchStacktrace(self, TestPosition.ON_FAILURE)
+        else:
+            if hasattr(engine, "on_success"):
+                try:
+                    engine.on_success()
+                except Exception as e:
+                    stacktrace = HitchStacktrace(self, TestPosition.ON_SUCCESS)
+
+        try:
+            engine.tear_down()
+        except Exception as e:
+            stacktrace = HitchStacktrace(self, TestPosition.TEARDOWN)
+
+        duration = time.time() - start_time
+        return Result(self, failure, duration, stacktrace=stacktrace.to_dict() if stacktrace else None)

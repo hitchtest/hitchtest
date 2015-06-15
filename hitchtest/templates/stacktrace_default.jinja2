@@ -1,0 +1,15 @@
+{{ Fore.BLUE }}
+{% if stacktrace.where == TestPosition.SETUP %}Exception occurred in {{ stacktrace.test.name }} ({{ stacktrace.test.filename }}) setup.
+{% elif stacktrace.where == TestPosition.TEARDOWN %}Exception occurred in {{ stacktrace.test.name }} ({{ stacktrace.test.filename }}) teardown.
+{% elif stacktrace.where == TestPosition.ON_FAILURE %}Exception occurred in {{ stacktrace.test.name }} ({{ stacktrace.test.filename }}) on_failure.
+{% elif stacktrace.where == TestPosition.ON_SUCCESS %}Exception occurred in {{ stacktrace.test.name }} ({{ stacktrace.test.filename }}) on_success.
+{% elif stacktrace.where == TestPosition.STEP %}Exception occurred in "{{ stacktrace.test.name }}" (step {{ stacktrace.step.index }}: "{{ stacktrace.step.name }}").
+{% endif %}{{ Fore.RESET }}
+{% for traceback in stacktrace.tracebacks %}
+[{{ traceback.id }}]: {{ traceback.filename }}
+    in function '{{ traceback.function }}' :
+--> {{ Style.BRIGHT}}{{ traceback.lineno }}{{ Style.RESET_ALL }} : {{ traceback.line }}
+
+{% endfor %}
+
+{{ Fore.RED }}{{ stacktrace.exception }}{{ Fore.RESET }}
