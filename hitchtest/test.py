@@ -1,10 +1,9 @@
-from IPython.core import ultratb
-from hitch_stacktrace import HitchStacktrace, TestPosition
-from scenario import Scenario
-from result import Result
+from hitchtest.hitch_stacktrace import HitchStacktrace, TestPosition
+from hitchtest.scenario import Scenario
+from hitchtest.result import Result
+from hitchtest import utils
 from os import path
 import inspect
-import utils
 import time
 import sys
 import imp
@@ -51,7 +50,6 @@ class Test(object):
         engine.name = self.name
         engine._test = self
         failure = False
-        tb_printer=ultratb.VerboseTB()
 
         sys.stdout.write("RUNNING TEST {}\n".format(self.name))
         sys.stdout.flush()

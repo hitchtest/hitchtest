@@ -1,8 +1,8 @@
 from jinja2.environment import Environment
 from jinja2 import FileSystemLoader
+from hitchtest import utils
 from os import path
 import colorama
-import utils
 import json
 import sys
 

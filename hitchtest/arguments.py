@@ -1,4 +1,4 @@
-import utils
+from hitchtest import utils
 
 
 class Arguments(object):

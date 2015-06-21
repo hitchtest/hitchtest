@@ -1,6 +1,6 @@
 from jinja2.environment import Environment
 from jinja2 import FileSystemLoader
-from hitch_stacktrace import TestPosition
+from hitchtest.hitch_stacktrace import TestPosition
 from os import path
 import colorama
 import json

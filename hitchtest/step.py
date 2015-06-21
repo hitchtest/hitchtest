@@ -1,5 +1,5 @@
-from arguments import Arguments
-import utils
+from hitchtest.arguments import Arguments
+from hitchtest import utils
 
 
 class Step(object):
@@ -9,8 +9,8 @@ class Step(object):
             self.name = str(yaml_step)
             self.arguments = Arguments(None)
         elif type(yaml_step) is dict and len(yaml_step.keys()) == 1:
-            self.name = yaml_step.keys()[0]
-            self.arguments = Arguments(yaml_step.values()[0])
+            self.name = list(yaml_step.keys())[0]
+            self.arguments = Arguments(list(yaml_step.values())[0])
         else:
             raise RuntimeError("Invalid YAML in step '{}'".format(yaml_step))
 

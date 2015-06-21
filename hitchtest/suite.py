@@ -1,13 +1,13 @@
-from results import Results
-import multiprocessing
 from os import path, getpgrp, getpgid, tcsetpgrp, fdopen
+from hitchtest.results import Results
+import multiprocessing
+import signal
+import sys
 import os
-import sys
-import time
-import sys
 
 
 class Suite(object):
+    """A group of tests defined at runtime."""
     def __init__(self, test_modules, settings):
         self.test_modules = test_modules
         self.settings = settings
@@ -58,12 +58,10 @@ class Suite(object):
             child_pid = child_queue.get()
             child_pgid = os.getpgid(child_pid)
             os.tcsetpgrp(fdin, child_pgid)
-            p.join()
-            try:
-                result = result_queue.get_nowait()
-            except multiprocessing.queues.Empty:
-                result = None
+            result = result_queue.get()
             result_list.append(result)
+
+            os.kill(p.pid, signal.SIGKILL)
 
             if quiet:
                 sys.stdout = hijacked_stdout

@@ -13,8 +13,8 @@ def read(*parts):
     return codecs.open(os.path.join(os.path.abspath(os.path.dirname(__file__)), *parts), 'r').read()
 
 setup(name="hitchtest",
-      version="0.4",
-      description="Declarative test compiler and runner using YAML and jinja2.",
+      version="0.5",
+      description="Declarative test runner using YAML and jinja2.",
       long_description=read('README.rst'),
       classifiers=[
           'Development Status :: 3 - Alpha',
@@ -28,10 +28,8 @@ setup(name="hitchtest",
           'Programming Language :: Python :: 2',
           'Programming Language :: Python :: 2.6',
           'Programming Language :: Python :: 2.7',
-#          'Programming Language :: Python :: 3',
-#          'Programming Language :: Python :: 3.1',
-#          'Programming Language :: Python :: 3.2',
-#          'Programming Language :: Python :: 3.3',
+          'Programming Language :: Python :: 3',
+          'Programming Language :: Python :: 3.4',
       ],
       keywords='hitch testing framework bdd tdd declarative tests testing jinja2 yaml',
       author='Colm O\'Connor',

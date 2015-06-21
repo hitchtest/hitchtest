@@ -2,11 +2,11 @@
 from click import command, group, argument, option
 from sys import stderr, stdout, exit, executable
 from os import path, walk, chdir
+from hitchtest import module
+from hitchtest import suite
 import yaml as pyyaml
 import fnmatch
-import module
 import signal
-import suite
 import json
 
 
@@ -34,13 +34,15 @@ def cli(filenames, yaml, quiet, results, settings, extra):
     # Load settings from file, if it exists
     if path.exists(settings_filename):
         with open(settings_filename) as settingsfile_handle:
-            settings_dict = dict(
-                settings_dict.items() + pyyaml.load(settingsfile_handle.read()).items()
-            )
+            settings_dict.update(pyyaml.load(settingsfile_handle.read()))
+            #settings_dict = dict(
+                #settings_dict.items() + pyyaml.load(settingsfile_handle.read()).items()
+            #)
 
     # Load extra settings from command line JSON
     if extra is not None:
-        settings_dict = dict(settings_dict.items() + json.loads(extra).items())
+        #settings_dict = dict(settings_dict.items() + json.loads(extra).items())
+        settings_dict.update(json.loads(extra).items())
 
 
     # Get list of files from specified files/directories

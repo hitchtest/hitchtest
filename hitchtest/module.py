@@ -1,7 +1,7 @@
 from os import path, remove, chdir, makedirs, system
 from jinja2.environment import Environment
 from jinja2 import FileSystemLoader
-from test import Test
+from hitchtest.test import Test
 import subprocess
 import inspect
 import jinja2

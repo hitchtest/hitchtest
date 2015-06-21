@@ -1,4 +1,4 @@
-from step import Step
+from hitchtest.step import Step
 
 class Scenario(object):
     def __init__(self, yaml_scenario):
