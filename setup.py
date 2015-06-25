@@ -13,7 +13,7 @@ def read(*parts):
     return codecs.open(os.path.join(os.path.abspath(os.path.dirname(__file__)), *parts), 'r').read()
 
 setup(name="hitchtest",
-      version="0.5",
+      version="0.5.1",
       description="Declarative test runner using YAML and jinja2.",
       long_description=read('README.rst'),
       classifiers=[
@@ -36,7 +36,7 @@ setup(name="hitchtest",
       author_email='colm.oconnor.github@gmail.com',
       url='https://hitch.readthedocs.org/',
       license='AGPL',
-      install_requires=['click', 'jinja2', 'pyyaml', 'ipython', 'colorama', ],
+      install_requires=['click', 'jinja2', 'pyyaml', 'ipython', 'colorama', 'psutil', ],
       packages=find_packages(exclude=["docs", ]),
       package_data={},
       entry_points=dict(console_scripts=['hitchtest=hitchtest:commandline.run',]),

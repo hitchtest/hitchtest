@@ -1,11 +1,10 @@
 from hitchtest.hitch_stacktrace import HitchStacktrace, TestPosition
+from hitchtest.utils import log, warn
 from hitchtest.scenario import Scenario
 from hitchtest.result import Result
-from hitchtest import utils
 from os import path
 import inspect
 import time
-import sys
 import imp
 import os
 
@@ -23,7 +22,7 @@ class Test(object):
         self.scenario = Scenario(yaml_test['scenario'])
 
         if "test" in self.name.lower():
-            sys.stderr.write("WARNING: The word 'test' should not appear in your test name - it is redundant.\n")
+            warn("WARNING: The word 'test' should not appear in your test name - it is redundant.\n")
         if self.name[0].isdigit():
             raise RuntimeError("ERROR : Test names cannot start with a digit.")
 
@@ -48,11 +47,11 @@ class Test(object):
         engine_class = [x for x in inspect.getmembers(engine_module) if x[0] == engine_class_name][0][1]
         engine = engine_class(self.settings, self.preconditions)
         engine.name = self.name
+        engine.aborted = False
         engine._test = self
         failure = False
 
-        sys.stdout.write("RUNNING TEST {}\n".format(self.name))
-        sys.stdout.flush()
+        log("RUNNING TEST {}\n".format(self.name))
         stacktrace = None
 
         try:
@@ -70,18 +69,19 @@ class Test(object):
                     failure = True
                     break
 
-        if failure:
-            if hasattr(engine, "on_failure"):
-                try:
-                    engine.on_failure(stacktrace)
-                except Exception as e:
-                    stacktrace = HitchStacktrace(self, TestPosition.ON_FAILURE)
-        else:
-            if hasattr(engine, "on_success"):
-                try:
-                    engine.on_success()
-                except Exception as e:
-                    stacktrace = HitchStacktrace(self, TestPosition.ON_SUCCESS)
+        if not engine.aborted:
+            if failure:
+                if hasattr(engine, "on_failure"):
+                    try:
+                        engine.on_failure(stacktrace)
+                    except Exception as e:
+                        stacktrace = HitchStacktrace(self, TestPosition.ON_FAILURE)
+            else:
+                if hasattr(engine, "on_success"):
+                    try:
+                        engine.on_success()
+                    except Exception as e:
+                        stacktrace = HitchStacktrace(self, TestPosition.ON_SUCCESS)
 
         try:
             engine.tear_down()
@@ -89,4 +89,6 @@ class Test(object):
             stacktrace = HitchStacktrace(self, TestPosition.TEARDOWN)
 
         duration = time.time() - start_time
-        return Result(self, failure, duration, stacktrace=stacktrace.to_dict() if stacktrace else None)
+        dict_stacktrace = stacktrace.to_dict() if stacktrace else None
+        result = Result(self, failure, duration, stacktrace=dict_stacktrace, aborted=engine.aborted)
+        return result

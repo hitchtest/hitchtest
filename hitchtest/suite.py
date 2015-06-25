@@ -1,7 +1,12 @@
 from os import path, getpgrp, getpgid, tcsetpgrp, fdopen
+from hitchtest.utils import log, warn
 from hitchtest.results import Results
+from hitchtest.result import Result
+from functools import partial
 import multiprocessing
+import psutil
 import signal
+import termios
 import sys
 import os
 
@@ -21,10 +26,24 @@ class Suite(object):
     def printyaml(self):
         """Print the test YAML for jinja2 debugging purposes."""
         for test_module in self.test_modules:
-            sys.stdout.write("\n# {}\n{}\n".format(
+            log("\n# {}\n{}\n".format(
                 test_module.filename,
                 test_module.test_yaml_text
             ))
+
+    def signal_and_wait(self, pid, sig, frame):
+        proc = psutil.Process(pid)
+        #proc.send_signal(sig)
+
+    def trigger_signal_and_wait(self, pid):
+        signal.signal(signal.SIGINT, signal.SIG_IGN)
+        signal.signal(signal.SIGTERM, signal.SIG_IGN)
+        signal.signal(signal.SIGHUP, signal.SIG_IGN)
+        signal.signal(signal.SIGQUIT, signal.SIG_IGN)
+        signal.signal(signal.SIGINT, partial(self.signal_and_wait, pid))
+        signal.signal(signal.SIGTERM, partial(self.signal_and_wait, pid))
+        signal.signal(signal.SIGHUP, partial(self.signal_and_wait, pid))
+        signal.signal(signal.SIGQUIT, partial(self.signal_and_wait, pid))
 
     def run(self, quiet=False):
         """Run all tests in the defined suite of modules."""
@@ -35,33 +54,59 @@ class Suite(object):
             if quiet:
                 hijacked_stdout = sys.stdout
                 hijacked_stderr = sys.stderr
-                sys.stdout = open(path.join(self.settings['engine_folder'], ".hitch", "test.out"), "a", 0)
-                sys.stderr = open(path.join(self.settings['engine_folder'], ".hitch", "test.err"), "a", 0)
+                sys.stdout = open(path.join(self.settings['engine_folder'], ".hitch", "test.out"), "ab", 0)
+                sys.stderr = open(path.join(self.settings['engine_folder'], ".hitch", "test.err"), "ab", 0)
 
-            def run_in_separate_process(fdin, child_queue, result_queue):
+            def run_test_in_separate_process(file_descriptor_stdin, result_queue):
+                """Change process group, run test and return result via a queue."""
                 orig_pgid = os.getpgrp()
                 os.setpgrp()
-                child_queue.put(os.getpgrp())
-                sys.stdin = os.fdopen(fdin)
+                result_queue.put("pgrp")
+                sys.stdin = os.fdopen(file_descriptor_stdin)
                 result = test.run()
-                os.tcsetpgrp(fdin, orig_pgid)
                 result_queue.put(result)
+                os.tcsetpgrp(file_descriptor_stdin, orig_pgid)
 
-            fdin = sys.stdin.fileno()
-            child_queue = multiprocessing.Queue()
+            orig_stdin_termios = termios.tcgetattr(sys.stdin.fileno())
+            orig_stdin_fileno = sys.stdin.fileno()
+            orig_pgid = os.getpgrp()
+
+            file_descriptor_stdin = sys.stdin.fileno()
             result_queue = multiprocessing.Queue()
-            p = multiprocessing.Process(
-                target=run_in_separate_process,
-                args=(fdin, child_queue, result_queue)
+
+
+            # Start new process to run test in, to isolate it from future test runs
+            test_process = multiprocessing.Process(
+                target=run_test_in_separate_process,
+                args=(file_descriptor_stdin, result_queue)
             )
-            p.start()
-            child_pid = child_queue.get()
-            child_pgid = os.getpgid(child_pid)
-            os.tcsetpgrp(fdin, child_pgid)
-            result = result_queue.get()
+
+            test_process.start()
+            #self.trigger_signal_and_wait(test_process.pid)
+
+            # Wait until PGRP is changed
+            result_queue.get()
+
+            # Make stdin go to the test process so that you can use ipython, etc.
+            os.tcsetpgrp(file_descriptor_stdin, os.getpgid(test_process.pid))
+
+            # Wait until process has finished
+            psutil.Process(test_process.pid).wait(timeout=600)
+
+            try:
+                result = result_queue.get_nowait()
+            except multiprocessing.queues.Empty:
+                result = Result(test, True, 0.0)
+
             result_list.append(result)
 
-            os.kill(p.pid, signal.SIGKILL)
+            if not quiet:
+                try:
+                    termios.tcsetattr(orig_stdin_fileno, termios.TCSANOW, orig_stdin_termios)
+                except termios.error as err:
+                    # I/O error caused by another test stopping this one
+                    if err[0] == 5:
+                        pass
 
             if quiet:
                 sys.stdout = hijacked_stdout
@@ -69,11 +114,11 @@ class Suite(object):
 
             if quiet and result is not None:
                 if result.failure:
-                    sys.stderr.write("X")
+                    warn("X")
                 else:
-                    sys.stderr.write(".")
+                    warn(".")
 
-            if result is None:
-                sys.stderr.write("ABORT\n")
+            if result is None or result.aborted:
+                warn("Aborted\n")
                 sys.exit(1)
         return Results(result_list)

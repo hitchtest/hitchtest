@@ -1,6 +1,7 @@
 """Command line interface to hitchtest."""
 from click import command, group, argument, option
-from sys import stderr, stdout, exit, executable
+from hitchtest.utils import log, warn, trigger_exit
+from sys import exit, executable
 from os import path, walk, chdir
 from hitchtest import module
 from hitchtest import suite
@@ -28,20 +29,16 @@ def cli(filenames, yaml, quiet, results, settings, extra):
     settings_filename = default_settings_filename if settings is None else path.join(engine_folder, settings)
 
     if settings is not None and not path.exists(settings_filename):
-        sys.stderr.write("Settings file '{}' could not be found!\n".format(settings_filename))
+        warn("Settings file '{}' could not be found!\n".format(settings_filename))
         sys.exit(1)
 
     # Load settings from file, if it exists
     if path.exists(settings_filename):
         with open(settings_filename) as settingsfile_handle:
             settings_dict.update(pyyaml.load(settingsfile_handle.read()))
-            #settings_dict = dict(
-                #settings_dict.items() + pyyaml.load(settingsfile_handle.read()).items()
-            #)
 
     # Load extra settings from command line JSON
     if extra is not None:
-        #settings_dict = dict(settings_dict.items() + json.loads(extra).items())
         settings_dict.update(json.loads(extra).items())
 
 
@@ -61,8 +58,7 @@ def cli(filenames, yaml, quiet, results, settings, extra):
         if filename.endswith(".test"):
             test_modules.append(module.Module(filename, settings_dict))
         else:
-            stderr.write("I didn't understand {}\n".format(filename))
-            stderr.flush()
+            warn("I didn't understand {}\n".format(filename))
             exit(1)
 
     # Create test suite
@@ -72,14 +68,15 @@ def cli(filenames, yaml, quiet, results, settings, extra):
         test_suite.printyaml()
     else:
         returned_results = test_suite.run(quiet=quiet)
-        stdout.write(returned_results.to_template(template=results))
+        log(returned_results.to_template(template=results))
         exit(1 if len(returned_results.failures()) > 0 else 0)
+
+def signal_exit():
+    exit(1)
 
 def run():
     """Run hitch tests"""
-    signal.signal(signal.SIGINT, signal.SIG_IGN)
-    signal.signal(signal.SIGTERM, signal.SIG_IGN)
-    signal.signal(signal.SIGHUP, signal.SIG_IGN)
+    #signals.trigger_exit()
     cli()
 
 if __name__ == '__main__':
