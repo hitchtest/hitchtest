@@ -81,6 +81,7 @@ class Suite(object):
                 args=(file_descriptor_stdin, result_queue)
             )
 
+            test_timed_out = False
             test_process.start()
             #self.trigger_signal_and_wait(test_process.pid)
 
@@ -91,13 +92,29 @@ class Suite(object):
             os.tcsetpgrp(file_descriptor_stdin, os.getpgid(test_process.pid))
 
             # Wait until process has finished
-            psutil.Process(test_process.pid).wait(timeout=600)
+            proc = psutil.Process(test_process.pid)
+            test_timeout = self.settings.get("test_timeout", None)
+            test_shutdown_timeout = self.settings.get("test_shutdown_timeout", 10)
+
+            try:
+                proc.wait(timeout=test_timeout)
+            except psutil.TimeoutExpired:
+                test_timed_out = True
+                proc.send_signal(signal.SIGTERM)
+
+                try:
+                    proc.wait(timeout=test_shutdown_timeout)
+                except psutil.TimeoutExpired:
+                    # TODO: kill all processes
+                    proc.send_signal(signal.SIGKILL)
 
             try:
                 result = result_queue.get_nowait()
             except multiprocessing.queues.Empty:
                 result = Result(test, True, 0.0)
 
+            if test_timed_out:
+                result.aborted = False
             result_list.append(result)
 
             if not quiet:
@@ -118,7 +135,7 @@ class Suite(object):
                 else:
                     warn(".")
 
-            if result is None or result.aborted:
+            if result.aborted:
                 warn("Aborted\n")
                 sys.exit(1)
         return Results(result_list)

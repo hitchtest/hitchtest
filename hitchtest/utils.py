@@ -21,6 +21,11 @@ def ipython_embed(message=None, functions_above=0):
     frame = inspect.stack()[functions_above + 1][0]
     ipython(message, frame)
 
+def stop_ipython():
+    from IPython.terminal.interactiveshell import TerminalInteractiveShell
+    TerminalInteractiveShell.exit_now = True
+
+
 def _write(handle, message):
     if os.isatty(handle.fileno()):
         handle.write(message)

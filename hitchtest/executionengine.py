@@ -26,4 +26,5 @@ class ExecutionEngine(object):
 
     def abort(self, signal, frame):
         self.aborted = True
+        utils.stop_ipython()
         raise HitchAbortedException("Hitch aborted")
