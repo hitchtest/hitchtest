@@ -1,15 +1,20 @@
-{{ Fore.BLUE }}
+{{ Fore.BLUE }}{{ Style.BRIGHT }}
 {% if stacktrace.where == TestPosition.SETUP %}Exception occurred in {{ stacktrace.test.name }} ({{ stacktrace.test.filename }}) setup.
 {% elif stacktrace.where == TestPosition.TEARDOWN %}Exception occurred in {{ stacktrace.test.name }} ({{ stacktrace.test.filename }}) teardown.
 {% elif stacktrace.where == TestPosition.ON_FAILURE %}Exception occurred in {{ stacktrace.test.name }} ({{ stacktrace.test.filename }}) on_failure.
 {% elif stacktrace.where == TestPosition.ON_SUCCESS %}Exception occurred in {{ stacktrace.test.name }} ({{ stacktrace.test.filename }}) on_success.
 {% elif stacktrace.where == TestPosition.STEP %}Exception occurred in "{{ stacktrace.test.name }}" (step {{ stacktrace.step.index }}: "{{ stacktrace.step.name }}").
-{% endif %}{{ Fore.RESET }}
+{% endif %}{{ Style.RESET_ALL }}{{ Fore.RESET }}
 {% for traceback in stacktrace.tracebacks %}
-[{{ traceback.id }}]: {{ traceback.filename }}
-    in function '{{ traceback.function }}' :
---> {{ Style.BRIGHT}}{{ traceback.lineno }}{{ Style.RESET_ALL }} : {{ traceback.line }}
+[{{ traceback.id }}]: function '{{ Style.BRIGHT }}{{ traceback.function }}{{ Style.RESET_ALL }}'   ( self.stacktrace[{{traceback.id}}].ipython() )
+  {{ traceback.filename }}
+    {% for lineno, line in traceback.loc_before %}
+    {{ lineno }} : {{ line }}{% endfor %}
+--> {{ Style.BRIGHT }}{{ traceback.lineno }}{{ Style.RESET_ALL }} : {{ traceback.line }}
+    {% for lineno, line in traceback.loc_after %}{{ lineno }} : {{ line }}
+    {% endfor %}
 
 {% endfor %}
+{{ Fore.RED }}{{ Style.BRIGHT }}{{ stacktrace.exception_type }}{{ Style.RESET_ALL }}
 
 {{ Fore.RED }}{{ stacktrace.exception }}{{ Fore.RESET }}

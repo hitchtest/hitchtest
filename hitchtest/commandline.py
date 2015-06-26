@@ -11,6 +11,8 @@ import signal
 import json
 
 
+# TODO : Remove --results and put the setting in to settings instead.
+
 @command()
 @argument('filenames', nargs=-1)
 @option('-y', '--yaml', is_flag=True, help='Output the YAML tests (for debugging).')
@@ -52,7 +54,8 @@ def cli(filenames, yaml, quiet, results, settings, extra):
         else:
             matches.append(filename)
 
-    # Get list of modules from matching files
+    # Get list of modules from matching directly specified files from command line
+    # and indirectly (in the directories of) directories specified from cmd line
     test_modules = []
     for filename in matches:
         if filename.endswith(".test"):
@@ -61,7 +64,6 @@ def cli(filenames, yaml, quiet, results, settings, extra):
             warn("I didn't understand {}\n".format(filename))
             exit(1)
 
-    # Create test suite
     test_suite = suite.Suite(test_modules, settings_dict)
 
     if yaml:

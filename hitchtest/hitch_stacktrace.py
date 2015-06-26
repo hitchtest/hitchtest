@@ -60,6 +60,9 @@ class HitchStacktrace(object):
             'where': self.where,
             'tracebacks': [traceback.to_dict() for traceback in self.tracebacks],
             'exception': str(self.exception),
+            'exception_type': "{}.{}".format(
+                type(self.exception).__module__, type(self.exception).__name__
+            ),
         }
 
     def __len__(self):
@@ -115,7 +118,7 @@ class HitchTraceback(object):
     def loc_before(self):
         with open(self.filename(), 'r') as source_handle:
             contents = source_handle.read().split('\n')
-        return contents[self.lineno() - 4:self.lineno() - 2]
+        return [x for x in enumerate(contents[self.lineno() - 3:self.lineno() - 1], self.lineno() - 2)]
 
     def loc(self):
         with open(self.filename(), 'r') as source_handle:
@@ -125,7 +128,7 @@ class HitchTraceback(object):
     def loc_after(self):
         with open(self.filename(), 'r') as source_handle:
             contents = source_handle.read().split('\n')
-        return contents[self.lineno():self.lineno() + 2]
+        return [x for x in enumerate(contents[self.lineno():self.lineno() + 2], self.lineno() + 1)]
 
     def __repr__(self):
         return "[{}] File {}, line {} in {}: {}".format(
