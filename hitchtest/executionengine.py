@@ -24,6 +24,11 @@ class ExecutionEngine(object):
     def tear_down(self):
         pass
 
+    def ipython(self, message):
+        self.signal_manager.turn_off_signal_handler(signal.SIGINT)
+        utils.ipython_embed(message)
+        self.signal_manager.attach_handler(signal.SIGINT, self.abort)
+
     def abort(self, signal, frame):
         self.aborted = True
         utils.stop_ipython()
