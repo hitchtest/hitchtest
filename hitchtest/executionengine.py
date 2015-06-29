@@ -25,11 +25,11 @@ class ExecutionEngine(object):
         pass
 
     def ipython(self, message):
-        self.signal_manager.turn_off_signal_handler(signal.SIGINT)
+        self.signal_manager.attach_handler(signal.SIGINT, signal.default_int_handler)
         utils.ipython_embed(message)
         self.signal_manager.attach_handler(signal.SIGINT, self.abort)
 
     def abort(self, signal, frame):
         self.aborted = True
         utils.stop_ipython()
-        raise HitchAbortedException("Hitch aborted")
+        raise HitchAbortedException

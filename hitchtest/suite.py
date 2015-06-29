@@ -1,5 +1,5 @@
 from os import path, getpgrp, getpgid, tcsetpgrp, fdopen
-from hitchtest.utils import log, warn
+from hitchtest.utils import log, warn, signals_trigger_exit, ignore_signals
 from hitchtest.results import Results
 from hitchtest.result import Result
 from functools import partial
@@ -30,20 +30,6 @@ class Suite(object):
                 test_module.filename,
                 test_module.test_yaml_text
             ))
-
-    def signal_and_wait(self, pid, sig, frame):
-        proc = psutil.Process(pid)
-        #proc.send_signal(sig)
-
-    def trigger_signal_and_wait(self, pid):
-        signal.signal(signal.SIGINT, signal.SIG_IGN)
-        signal.signal(signal.SIGTERM, signal.SIG_IGN)
-        signal.signal(signal.SIGHUP, signal.SIG_IGN)
-        signal.signal(signal.SIGQUIT, signal.SIG_IGN)
-        signal.signal(signal.SIGINT, partial(self.signal_and_wait, pid))
-        signal.signal(signal.SIGTERM, partial(self.signal_and_wait, pid))
-        signal.signal(signal.SIGHUP, partial(self.signal_and_wait, pid))
-        signal.signal(signal.SIGQUIT, partial(self.signal_and_wait, pid))
 
     def run(self, quiet=False):
         """Run all tests in the defined suite of modules."""
@@ -82,8 +68,11 @@ class Suite(object):
             )
 
             test_timed_out = False
+
+            # Pass over signal handling to test running code
+            ignore_signals()
+
             test_process.start()
-            #self.trigger_signal_and_wait(test_process.pid)
 
             # Wait until PGRP is changed
             result_queue.get()
@@ -107,6 +96,11 @@ class Suite(object):
                 except psutil.TimeoutExpired:
                     # TODO: kill all processes
                     proc.send_signal(signal.SIGKILL)
+
+
+            # Take back signal handling from test running code
+            signals_trigger_exit()
+
 
             try:
                 result = result_queue.get_nowait()

@@ -1,6 +1,6 @@
 """Command line interface to hitchtest."""
 from click import command, group, argument, option
-from hitchtest.utils import log, warn, trigger_exit
+from hitchtest.utils import log, warn, signals_trigger_exit
 from sys import exit, executable
 from os import path, walk, chdir
 from hitchtest import module
@@ -73,12 +73,9 @@ def cli(filenames, yaml, quiet, results, settings, extra):
         log(returned_results.to_template(template=results))
         exit(1 if len(returned_results.failures()) > 0 else 0)
 
-def signal_exit():
-    exit(1)
-
 def run():
     """Run hitch tests"""
-    #signals.trigger_exit()
+    signals_trigger_exit()
     cli()
 
 if __name__ == '__main__':

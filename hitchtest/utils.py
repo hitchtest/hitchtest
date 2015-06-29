@@ -49,9 +49,16 @@ def do_exit(signal, frame):
     """Just exit."""
     sys.exit(1)
 
-def trigger_exit():
-    """Ignore all signals (e.g. ctrl-C)."""
+def signals_trigger_exit():
+    """Make all signals cause a system exit."""
     signal.signal(signal.SIGINT, do_exit)
     signal.signal(signal.SIGTERM, do_exit)
     signal.signal(signal.SIGHUP, do_exit)
     signal.signal(signal.SIGQUIT, do_exit)
+
+def ignore_signals():
+    """Ignore all signals (e.g. ctrl-C)."""
+    signal.signal(signal.SIGINT, signal.SIG_IGN)
+    signal.signal(signal.SIGTERM, signal.SIG_IGN)
+    signal.signal(signal.SIGHUP, signal.SIG_IGN)
+    signal.signal(signal.SIGQUIT, signal.SIG_IGN)
