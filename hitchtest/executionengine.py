@@ -24,7 +24,7 @@ class ExecutionEngine(object):
     def tear_down(self):
         pass
 
-    def ipython(self, message):
+    def ipython(self, message=None):
         self.signal_manager.attach_handler(signal.SIGINT, signal.default_int_handler)
         utils.ipython_embed(message)
         self.signal_manager.attach_handler(signal.SIGINT, self.abort)
