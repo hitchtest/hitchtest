@@ -6,7 +6,6 @@ from os import path
 import inspect
 import time
 import imp
-import os
 
 
 class Test(object):
@@ -71,17 +70,15 @@ class Test(object):
 
         if not engine.aborted:
             if failure:
-                if hasattr(engine, "on_failure"):
-                    try:
-                        engine.on_failure(stacktrace)
-                    except Exception as e:
-                        stacktrace = HitchStacktrace(self, TestPosition.ON_FAILURE)
+                try:
+                    engine.on_failure(stacktrace)
+                except Exception as e:
+                    stacktrace = HitchStacktrace(self, TestPosition.ON_FAILURE)
             else:
-                if hasattr(engine, "on_success"):
-                    try:
-                        engine.on_success()
-                    except Exception as e:
-                        stacktrace = HitchStacktrace(self, TestPosition.ON_SUCCESS)
+                try:
+                    engine.on_success()
+                except Exception as e:
+                    stacktrace = HitchStacktrace(self, TestPosition.ON_SUCCESS)
 
         try:
             engine.tear_down()
