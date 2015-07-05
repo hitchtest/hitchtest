@@ -6,7 +6,7 @@ def check_output_lines(command):
 
 def return_code_zero(command):
     """Returns True if command called has return code zero."""
-    return call(command, stdout=PIPE, stderr=PIPE)
+    return call(command, stdout=PIPE, stderr=PIPE) == 0
 
 def versiontuple(v):
     return tuple(map(int, (v.split("."))))
