@@ -36,9 +36,10 @@ def debs(packages):
 def brew(packages):
     """Verify that a list of brew packages are installed. Ignore if not a mac."""
     if sys.platform == "darwin":
-        if not return_code_zero(["brew", "list",] + packages):
+        version_list = [x for x in check_output_lines(["brew", "list", "--versions"] + packages) if x != ""]
+        if len(version_list) < len(packages):
             raise HitchEnvironmentException(
-                "brew install {} : required for test to run".format(' '.format(packages))
+                "brew install {} : required for test to run".format(' '.join(packages))
             )
 
 def systembits(bits):
