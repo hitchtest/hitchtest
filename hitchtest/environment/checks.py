@@ -16,7 +16,8 @@ def freeports(required_ports):
 
     for line in lines:
         columns = [col for col in line.split(" ") if col != ""]
-        used_ports.append(int(columns[3].split(":")[1]))
+        if len(columns[3].split(":")) == 2:
+            used_ports.append(int(columns[3].split(":")[1]))
 
     overlap = list((Counter(used_ports) & Counter(required_ports)).elements())
     in_use = ', '.join([str(port) for port in overlap])
