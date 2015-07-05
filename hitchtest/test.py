@@ -2,6 +2,7 @@ from hitchtest.hitch_stacktrace import HitchStacktrace, TestPosition
 from hitchtest.utils import log, warn
 from hitchtest.scenario import Scenario
 from hitchtest.result import Result
+from hitchtest.environment import verify
 from os import path
 import inspect
 import time
@@ -54,6 +55,7 @@ class Test(object):
         stacktrace = None
 
         try:
+            verify(self.settings.get("environment", []))
             engine.set_up()
         except Exception as e:
             stacktrace = HitchStacktrace(self, TestPosition.SETUP)
