@@ -2,22 +2,20 @@ from hitchtest.environment.utils import version_comparison, return_code_zero, ch
 from collections import Counter
 from os import path
 import struct
+import psutil
 import sys
 import re
+
 
 class HitchEnvironmentException(Exception):
     pass
 
 def freeports(required_ports):
     """Verifies that none of the required_ports are not in use. Raise exception if they are."""
-    # TODO: Harden this code up a bit
-    lines = [line for line in check_output_lines(["netstat", "-ln"]) if line.startswith("tcp")]
-    used_ports = []
-
-    for line in lines:
-        columns = [col for col in line.split(" ") if col != ""]
-        if len(columns[3].split(":")) == 2:
-            used_ports.append(int(columns[3].split(":")[1]))
+    used_ports = [
+        connection.laddr[1] for connection in psutil.net_connections()
+            if connection.status == 'LISTEN'
+    ]
 
     overlap = list((Counter(used_ports) & Counter(required_ports)).elements())
     in_use = ', '.join([str(port) for port in overlap])
@@ -75,7 +73,7 @@ def approved_platforms(platforms):
 # TODO : Linux Kernel version
 # TODO : Mac OS X kernel version
 # TODO : ulimit
-# TODO : nslookup -timeout=0.1 microsoft.com
+# TODO : nslookup -timeout=1 microsoft.com
 
 
 #def linux_distro(distros):
