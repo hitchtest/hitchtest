@@ -70,7 +70,9 @@ def cli(filenames, yaml, quiet, results, settings, extra):
         test_suite.printyaml()
     else:
         returned_results = test_suite.run(quiet=quiet)
-        log(returned_results.to_template(template=results))
+        # Lines must be split to prevent stdout blocking
+        for line in returned_results.to_template(template=results).split('\n'):
+            log("{}\n".format(line))
         exit(1 if len(returned_results.failures()) > 0 else 0)
 
 def run():

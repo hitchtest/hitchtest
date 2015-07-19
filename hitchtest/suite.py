@@ -85,11 +85,11 @@ class Suite(object):
             test_timeout = self.settings.get("test_timeout", None)
             test_shutdown_timeout = self.settings.get("test_shutdown_timeout", 10)
 
-            import fcntl
-            # Make stdout blocking - to prevent BlockingIOError 35 on Mac OS X
-            flags = fcntl.fcntl(sys.stdout.fileno(), fcntl.F_GETFL)
-            if flags & os.O_NONBLOCK:
-                fcntl.fcntl(sys.stdout.fileno(), fcntl.F_SETFL, flags & ~os.O_NONBLOCK)
+            #import fcntl
+            ## Make stdout blocking - to prevent BlockingIOError 35 on Mac OS X
+            #flags = fcntl.fcntl(sys.stdout.fileno(), fcntl.F_GETFL)
+            #if flags & os.O_NONBLOCK:
+                #fcntl.fcntl(sys.stdout.fileno(), fcntl.F_SETFL, flags & ~os.O_NONBLOCK)
 
             try:
                 proc.wait(timeout=test_timeout)
