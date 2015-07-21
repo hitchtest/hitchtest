@@ -32,6 +32,8 @@ class HitchStacktrace(object):
         # Create list of tracebacks
         while tb is not None:
             filename = tb.tb_frame.f_code.co_filename
+            if filename == '<frozen importlib._bootstrap>':
+                break
             if "hitchtest/" not in filename:
                 self.tracebacks.append(HitchTraceback(tb_id, tb))
                 tb_id = tb_id + 1
