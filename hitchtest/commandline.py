@@ -43,6 +43,9 @@ def cli(filenames, yaml, quiet, results, settings, extra):
     if extra is not None:
         settings_dict.update(json.loads(extra).items())
 
+    if len(filenames) == 0:
+        warn("No tests specified.\n")
+        exit(1)
 
     # Get list of files from specified files/directories
     matches = []
