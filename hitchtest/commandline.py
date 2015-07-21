@@ -25,7 +25,7 @@ def cli(filenames, yaml, quiet, results, settings, extra):
     # .hitch/virtualenv/bin/python <- 4 directories up from where the python exec resides
     engine_folder = path.abspath(path.join(executable, "..", "..", "..", ".."))
     settings_dict = {'engine_folder': engine_folder, 'quiet': quiet, }
-    filenames = [path.relpath(filename, engine_folder) for filename in filenames]
+    filenames = [path.abspath(path.relpath(filename, engine_folder)) for filename in filenames]
     chdir(engine_folder)
     default_settings_filename = path.join(engine_folder, "settings.yml")
     settings_filename = default_settings_filename if settings is None else path.join(engine_folder, settings)

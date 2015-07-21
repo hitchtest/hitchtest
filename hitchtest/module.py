@@ -29,8 +29,8 @@ class Module(object):
             self.settings = settings
 
         env = Environment()
-        env.loader = FileSystemLoader(self.engine_folder)
-        tmpl = env.get_template(filename)
+        env.loader = FileSystemLoader(path.split(filename)[0])
+        tmpl = env.get_template(path.split(filename)[1])
         self.test_yaml_text = tmpl.render(**self.settings)
 
         self.tests = []
