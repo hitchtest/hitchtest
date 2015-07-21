@@ -32,7 +32,7 @@ def cli(filenames, yaml, quiet, results, settings, extra):
 
     if settings is not None and not path.exists(settings_filename):
         warn("Settings file '{}' could not be found!\n".format(settings_filename))
-        sys.exit(1)
+        exit(1)
 
     # Load settings from file, if it exists
     if path.exists(settings_filename):
