@@ -7,24 +7,38 @@ from os import path
 import inspect
 import time
 import imp
+import re
 
 
 class Test(object):
     def __init__(self, yaml_test, settings, filename, title):
         self.settings = settings
         self.filename = filename
-        self.name = yaml_test['name'] if 'name' in yaml_test else title
-        self.engine = yaml_test['engine']
-        self.description = yaml_test['description'] if 'description' in yaml_test else None
-        self.preconditions = yaml_test['preconditions'] if 'preconditions' in yaml_test else None
-        self.tags = yaml_test['tags'] if 'tags' in yaml_test else None
-        self.features = yaml_test['features'] if 'features' in yaml_test else None
-        self.scenario = Scenario(yaml_test['scenario'])
+        self.name = yaml_test.get('name', title)
+        self.engine = yaml_test.get('engine', '')
+        self.description = yaml_test.get('description')
+        self.preconditions = yaml_test.get('preconditions')
+        self.tags = yaml_test.get('tags')
+        self.features = yaml_test.get('features')
+        self.scenario = Scenario(yaml_test.get('scenario', []))
 
-        if "test" in self.name.lower():
-            warn("WARNING: The word 'test' should not appear in your test name - it is redundant.\n")
+        if re.compile("^(.*?)\:(.*?)$").match(self.engine) is None:
+            raise RuntimeError("ERROR : engine should be of the form 'engine_filename.py:ClassName'")
+        else:
+            module_source = path.abspath(path.join(self.settings['engine_folder'], self.engine.split(":")[0]))
+            if not path.exists(module_source):
+                raise RuntimeError("ERROR : engine filename '{}' not found.".format(self.engine.split(':')[0]))
+
+            engine_class_name = self.engine.split(":")[1]
+            engine_module = imp.load_source("engine", module_source)
+            if len([x for x in inspect.getmembers(engine_module) if x[0] == engine_class_name]) == 0:
+                raise RuntimeError("ERROR : Class {} not found in engine.".format(engine_class_name))
+            self.engine_class = [x for x in inspect.getmembers(engine_module) if x[0] == engine_class_name][0][1]
+
         if self.name[0].isdigit():
             raise RuntimeError("ERROR : Test names cannot start with a digit.")
+        if "test" in self.name.lower():
+            warn("WARNING: The word 'test' should not appear in your test name - it is redundant.\n")
 
     def to_dict(self):
         return {
@@ -40,54 +54,57 @@ class Test(object):
 
     def run(self):
         start_time = time.time()
-
-        module_source = path.abspath(path.join(self.settings['engine_folder'], self.engine.split(":")[0]))
-        engine_class_name = self.engine.split(":")[1]
-        engine_module = imp.load_source("engine", module_source)
-        engine_class = [x for x in inspect.getmembers(engine_module) if x[0] == engine_class_name][0][1]
-        engine = engine_class(self.settings, self.preconditions)
-        engine.name = self.name
-        engine.aborted = False
-        engine._test = self
+        stacktrace = None
+        engine = None
         failure = False
 
-        log("RUNNING TEST {}\n".format(self.name))
-        stacktrace = None
-
         try:
-            verify(self.settings.get("environment", []))
-            engine.set_up()
+            engine = self.engine_class(self.settings, self.preconditions)
+            engine.name = self.name
+            engine.aborted = False
+            engine._test = self
         except Exception as e:
             stacktrace = HitchStacktrace(self, TestPosition.SETUP)
             failure = True
 
         if not failure:
-            for step in self.scenario.steps:
-                try:
-                    step.run(engine)
-                except Exception as e:
-                    stacktrace = HitchStacktrace(self, TestPosition.STEP, step=step)
-                    failure = True
-                    break
+            log("RUNNING TEST {}\n".format(self.name))
 
-        if not engine.aborted:
-            if failure:
-                try:
-                    engine.on_failure(stacktrace)
-                except Exception as e:
-                    stacktrace = HitchStacktrace(self, TestPosition.ON_FAILURE)
-            else:
-                try:
-                    engine.on_success()
-                except Exception as e:
-                    stacktrace = HitchStacktrace(self, TestPosition.ON_SUCCESS)
+            try:
+                verify(self.settings.get("environment", []))
+                engine.set_up()
+            except Exception as e:
+                stacktrace = HitchStacktrace(self, TestPosition.SETUP)
+                failure = True
 
-        try:
-            engine.tear_down()
-        except Exception as e:
-            stacktrace = HitchStacktrace(self, TestPosition.TEARDOWN)
+            if not failure:
+                for step in self.scenario.steps:
+                    try:
+                        step.run(engine)
+                    except Exception as e:
+                        stacktrace = HitchStacktrace(self, TestPosition.STEP, step=step)
+                        failure = True
+                        break
+
+            if not engine.aborted:
+                if failure:
+                    try:
+                        engine.on_failure(stacktrace)
+                    except Exception as e:
+                        stacktrace = HitchStacktrace(self, TestPosition.ON_FAILURE)
+                else:
+                    try:
+                        engine.on_success()
+                    except Exception as e:
+                        stacktrace = HitchStacktrace(self, TestPosition.ON_SUCCESS)
+
+            try:
+                engine.tear_down()
+            except Exception as e:
+                stacktrace = HitchStacktrace(self, TestPosition.TEARDOWN)
 
         duration = time.time() - start_time
         dict_stacktrace = stacktrace.to_dict() if stacktrace else None
-        result = Result(self, failure, duration, stacktrace=dict_stacktrace, aborted=engine.aborted)
+        aborted = engine.aborted if engine is not None else False
+        result = Result(self, failure, duration, stacktrace=dict_stacktrace, aborted=aborted)
         return result
