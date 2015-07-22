@@ -3,6 +3,7 @@ from collections import Counter
 from os import path
 import struct
 import psutil
+import socket
 import sys
 import re
 
@@ -12,16 +13,19 @@ class HitchEnvironmentException(Exception):
 
 def freeports(required_ports):
     """Verifies that none of the required_ports are not in use. Raise exception if they are."""
-    used_ports = [
-        connection.laddr[1] for connection in psutil.net_connections()
-            if connection.status == 'LISTEN'
-    ]
+    unusable_ports = []
+    for port in required_ports:
+        socket_to_try = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        try:
+            socket_to_try.bind(('', port))
+            socket_to_try.listen(1)
+            socket_to_try.close()
+        except socket.error:
+            unusable_ports.append(str(port))
 
-    overlap = list((Counter(used_ports) & Counter(required_ports)).elements())
-    in_use = ', '.join([str(port) for port in overlap])
-    if len(overlap) > 0:
+    if len(unusable_ports) > 0:
         raise HitchEnvironmentException(
-            "Required network port(s) {} currently in use.".format(in_use)
+            "Required network port(s): {} not usable.".format(', '.join(unusable_ports))
         )
 
 def debs(packages):
