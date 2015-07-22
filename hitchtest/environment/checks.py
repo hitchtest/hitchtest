@@ -3,7 +3,6 @@ from collections import Counter
 from os import path
 import struct
 import psutil
-import socket
 import sys
 import re
 
@@ -14,14 +13,17 @@ class HitchEnvironmentException(Exception):
 def freeports(required_ports):
     """Verifies that none of the required_ports are not in use. Raise exception if they are."""
     unusable_ports = []
+    import socket
     for port in required_ports:
         socket_to_try = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        socket_to_try.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         try:
             socket_to_try.bind(('', port))
             socket_to_try.listen(1)
-            socket_to_try.close()
-        except socket.error:
+        except socket.error as e:
             unusable_ports.append(str(port))
+        finally:
+            socket_to_try.close()
 
     if len(unusable_ports) > 0:
         raise HitchEnvironmentException(
