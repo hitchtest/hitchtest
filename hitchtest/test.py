@@ -62,6 +62,7 @@ class Test(object):
             engine = self.engine_class(self.settings, self.preconditions)
             engine.name = self.name
             engine.aborted = False
+            engine.stacktrace = None
             engine._test = self
         except Exception as e:
             stacktrace = HitchStacktrace(self, TestPosition.SETUP)
@@ -89,7 +90,8 @@ class Test(object):
             if not engine.aborted:
                 if failure:
                     try:
-                        engine.on_failure(stacktrace)
+                        engine.stacktrace = stacktrace
+                        engine.on_failure()
                     except Exception as e:
                         stacktrace = HitchStacktrace(self, TestPosition.ON_FAILURE)
                 else:
