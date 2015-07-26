@@ -1,10 +1,12 @@
 from IPython.terminal.embed import InteractiveShellEmbed
-import IPython
+import functools
 import patoolib
 import requests
+import IPython
 import inspect
 import signal
 import shutil
+import psutil
 import os
 import sys
 
@@ -65,6 +67,15 @@ def ignore_signals():
     signal.signal(signal.SIGTERM, signal.SIG_IGN)
     signal.signal(signal.SIGHUP, signal.SIG_IGN)
     signal.signal(signal.SIGQUIT, signal.SIG_IGN)
+
+def signal_pass_on_to_separate_process_group(pid):
+    def pass_on_signal(pid, signum, frame):
+        os.kill(pid, signum)
+
+    signal.signal(signal.SIGINT, functools.partial(pass_on_signal, pid))
+    signal.signal(signal.SIGTERM, functools.partial(pass_on_signal, pid))
+    signal.signal(signal.SIGHUP, functools.partial(pass_on_signal, pid))
+    signal.signal(signal.SIGQUIT, functools.partial(pass_on_signal, pid))
 
 def extract_archive(filename, directory):
     patoolib.extract_archive(filename, outdir=directory)

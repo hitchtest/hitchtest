@@ -1,5 +1,5 @@
 from os import path, getpgrp, getpgid, tcsetpgrp, fdopen
-from hitchtest.utils import log, warn, signals_trigger_exit, ignore_signals
+from hitchtest.utils import log, warn, signals_trigger_exit, ignore_signals, signal_pass_on_to_separate_process_group
 from hitchtest.results import Results
 from hitchtest.result import Result
 from functools import partial
@@ -69,10 +69,10 @@ class Suite(object):
 
             test_timed_out = False
 
-            # Pass over signal handling to test running code
-            ignore_signals()
-
             test_process.start()
+
+            # Ignore all exit signals but pass them on
+            signal_pass_on_to_separate_process_group(test_process.pid)
 
             # Wait until PGRP is changed
             result_queue.get()
@@ -84,12 +84,6 @@ class Suite(object):
             proc = psutil.Process(test_process.pid)
             test_timeout = self.settings.get("test_timeout", None)
             test_shutdown_timeout = self.settings.get("test_shutdown_timeout", 10)
-
-            #import fcntl
-            ## Make stdout blocking - to prevent BlockingIOError 35 on Mac OS X
-            #flags = fcntl.fcntl(sys.stdout.fileno(), fcntl.F_GETFL)
-            #if flags & os.O_NONBLOCK:
-                #fcntl.fcntl(sys.stdout.fileno(), fcntl.F_SETFL, flags & ~os.O_NONBLOCK)
 
             try:
                 proc.wait(timeout=test_timeout)
