@@ -35,7 +35,7 @@ def debs(packages):
     if return_code_zero(["which", "dpkg"]):
         if not return_code_zero(["dpkg", "--list",] + packages):
             raise HitchEnvironmentException(
-                "sudo apt-get install {} : required for test to run".format(' '.format(packages))
+                "sudo apt-get install {} : required for test to run".format(' '.join(packages))
             )
 
 def brew(packages):
