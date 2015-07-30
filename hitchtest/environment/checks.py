@@ -32,6 +32,9 @@ def freeports(required_ports):
 
 def debs(packages):
     """Verify that a list of debs are installed. Ignore if not a deb based system."""
+    if len(packages) > 10:
+        debs(packages[10:])
+        packages = packages[:10]
     if return_code_zero(["which", "dpkg"]):
         if not return_code_zero(["dpkg", "--list",] + packages):
             raise HitchEnvironmentException(
