@@ -49,13 +49,20 @@ def cli(filenames, yaml, quiet, results, settings, extra):
 
     # Get list of files from specified files/directories
     matches = []
+    test_not_found = False
     for filename in filenames:
+        if not path.exists(filename):
+            warn("Test '{}' not found.\n".format(filename))
+            test_not_found = True
         if path.isdir(filename):
             for root, dirnames, filenames_in_dir in walk(filename):
                 for filename_in_dir in fnmatch.filter(filenames_in_dir, '*.test'):
                     matches.append(path.join(root, filename_in_dir))
         else:
             matches.append(filename)
+
+    if test_not_found:
+        exit(1)
 
     # Get list of modules from matching directly specified files from command line
     # and indirectly (in the directories of) directories specified from cmd line
