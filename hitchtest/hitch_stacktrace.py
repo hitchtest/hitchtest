@@ -19,12 +19,13 @@ class TestPosition(object):
 class HitchStacktrace(object):
     """Representation of a python stacktrace."""
 
-    def __init__(self, test, where, step=None):
+    def __init__(self, test, where, show_hitch_stacktrace, step=None):
         """Create this object with sys.exc_info()[2]"""
         self.tracebacks = []
         self.test = test
         self.where = where
         self.step = step
+        self.show_hitch_stacktrace = show_hitch_stacktrace
         tb_id = 0
         tb = sys.exc_info()[2]
         self.exception = sys.exc_info()[1]
@@ -34,7 +35,7 @@ class HitchStacktrace(object):
             filename = tb.tb_frame.f_code.co_filename
             if filename == '<frozen importlib._bootstrap>':
                 break
-            if "hitchtest/" not in filename:
+            if self.show_hitch_stacktrace or "hitchtest/" not in filename:
                 self.tracebacks.append(HitchTraceback(tb_id, tb))
                 tb_id = tb_id + 1
             tb = tb.tb_next

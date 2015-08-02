@@ -57,6 +57,7 @@ class Test(object):
         stacktrace = None
         engine = None
         failure = False
+        show_hitch_stacktrace = self.settings.get("show_hitch_stacktrace", False)
 
         try:
             engine = self.engine_class(self.settings, self.preconditions)
@@ -65,7 +66,7 @@ class Test(object):
             engine.stacktrace = None
             engine._test = self
         except Exception as e:
-            stacktrace = HitchStacktrace(self, TestPosition.SETUP)
+            stacktrace = HitchStacktrace(self, TestPosition.SETUP, show_hitch_stacktrace)
             failure = True
 
         if not failure:
@@ -75,7 +76,7 @@ class Test(object):
                 verify(self.settings.get("environment", []))
                 engine.set_up()
             except Exception as e:
-                stacktrace = HitchStacktrace(self, TestPosition.SETUP)
+                stacktrace = HitchStacktrace(self, TestPosition.SETUP, show_hitch_stacktrace)
                 failure = True
 
             if not failure:
@@ -83,7 +84,7 @@ class Test(object):
                     try:
                         step.run(engine)
                     except Exception as e:
-                        stacktrace = HitchStacktrace(self, TestPosition.STEP, step=step)
+                        stacktrace = HitchStacktrace(self, TestPosition.STEP, show_hitch_stacktrace, step=step)
                         failure = True
                         break
 
@@ -93,17 +94,17 @@ class Test(object):
                         engine.stacktrace = stacktrace
                         engine.on_failure()
                     except Exception as e:
-                        stacktrace = HitchStacktrace(self, TestPosition.ON_FAILURE)
+                        stacktrace = HitchStacktrace(self, TestPosition.ON_FAILURE, show_hitch_stacktrace)
                 else:
                     try:
                         engine.on_success()
                     except Exception as e:
-                        stacktrace = HitchStacktrace(self, TestPosition.ON_SUCCESS)
+                        stacktrace = HitchStacktrace(self, TestPosition.ON_SUCCESS, show_hitch_stacktrace)
 
             try:
                 engine.tear_down()
             except Exception as e:
-                stacktrace = HitchStacktrace(self, TestPosition.TEARDOWN)
+                stacktrace = HitchStacktrace(self, TestPosition.TEARDOWN, show_hitch_stacktrace)
 
         duration = time.time() - start_time
         dict_stacktrace = stacktrace.to_dict() if stacktrace else None
