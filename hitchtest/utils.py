@@ -7,8 +7,10 @@ import inspect
 import signal
 import shutil
 import psutil
-import os
 import sys
+import os
+import io
+
 
 def to_underscore_style(text):
     """Changes "Something like this" to "something_like_this"."""
@@ -33,10 +35,10 @@ def stop_ipython():
 
 
 def _write(handle, message):
-    if os.isatty(handle.fileno()):
+    if isinstance(handle, io.TextIOWrapper):
         handle.write(message)
     else:
-        handle.write(bytes(message, 'utf8'))
+        handle.write(message.encode('utf8'))
     handle.flush()
 
 def log(message):

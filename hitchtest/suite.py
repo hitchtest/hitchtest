@@ -48,13 +48,24 @@ class Suite(object):
                 orig_pgid = os.getpgrp()
                 os.setpgrp()
                 result_queue.put("pgrp")
-                sys.stdin = os.fdopen(file_descriptor_stdin)
+                if not quiet:
+                    sys.stdin = os.fdopen(file_descriptor_stdin)
                 result = test.run()
                 result_queue.put(result)
-                os.tcsetpgrp(file_descriptor_stdin, orig_pgid)
+                if not quiet:
+                    try:
+                        os.tcsetpgrp(file_descriptor_stdin, orig_pgid)
+                    except OSError as error:
+                        if error.args[0] == 25:
+                            pass
 
-            orig_stdin_termios = termios.tcgetattr(sys.stdin.fileno())
-            orig_stdin_fileno = sys.stdin.fileno()
+            if not quiet:
+                try:
+                    orig_stdin_termios = termios.tcgetattr(sys.stdin.fileno())
+                except termios.error as error:
+                    if error.args[0] == 25:
+                        orig_stdin_termios = None
+                orig_stdin_fileno = sys.stdin.fileno()
             orig_pgid = os.getpgrp()
 
             file_descriptor_stdin = sys.stdin.fileno()
@@ -78,7 +89,12 @@ class Suite(object):
             result_queue.get()
 
             # Make stdin go to the test process so that you can use ipython, etc.
-            os.tcsetpgrp(file_descriptor_stdin, os.getpgid(test_process.pid))
+            if not quiet:
+                try:
+                    os.tcsetpgrp(file_descriptor_stdin, os.getpgid(test_process.pid))
+                except OSError as error:
+                    if error.args[0] == 25:
+                        pass
 
             # Wait until process has finished
             proc = psutil.Process(test_process.pid)
@@ -111,7 +127,7 @@ class Suite(object):
                 result.aborted = False
             result_list.append(result)
 
-            if not quiet:
+            if not quiet and orig_stdin_termios is not None:
                 try:
                     termios.tcsetattr(orig_stdin_fileno, termios.TCSANOW, orig_stdin_termios)
                 except termios.error as err:
