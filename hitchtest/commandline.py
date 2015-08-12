@@ -47,7 +47,11 @@ def cli(filenames, yaml, quiet, results, settings, extra):
 
     # Load extra settings from command line JSON
     if extra is not None:
-        settings_dict.update(json.loads(extra).items())
+        try:
+            settings_dict.update(json.loads(extra).items())
+        except ValueError as error:
+            warn("""{} in:\n ==> --extra '{}' (must be valid JSON)\n""".format(str(error), extra))
+            exit(1)
 
     if len(filenames) == 0:
         warn("No tests specified.\n")
