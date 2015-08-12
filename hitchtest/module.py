@@ -1,6 +1,7 @@
 from os import path, remove, chdir, makedirs, system
 from jinja2.environment import Environment
 from jinja2 import FileSystemLoader
+from hitchtest.utils import warn
 from hitchtest.test import Test
 import subprocess
 import inspect
@@ -34,7 +35,13 @@ class Module(object):
         self.test_yaml_text = tmpl.render(**self.settings)
 
         self.tests = []
-        module_yaml_as_dict = yaml.load(self.test_yaml_text)
+        try:
+            module_yaml_as_dict = yaml.load(self.test_yaml_text)
+        except pyyaml.parser.MarkedYAMLError as error:
+            warn("YAML parser error in {}:\n".format(filename))
+            warn(str(error))
+            warn("\n")
+            sys.exit(1)
 
         if len(module_yaml_as_dict) == 1:
             self.multiple_tests = False
