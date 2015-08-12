@@ -99,11 +99,13 @@ class Test(object):
                     try:
                         engine.on_success()
                     except Exception as e:
+                        failure = True
                         stacktrace = HitchStacktrace(self, TestPosition.ON_SUCCESS, show_hitch_stacktrace)
 
             try:
                 engine.tear_down()
             except Exception as e:
+                failure = True
                 stacktrace = HitchStacktrace(self, TestPosition.TEARDOWN, show_hitch_stacktrace)
 
         duration = time.time() - start_time
