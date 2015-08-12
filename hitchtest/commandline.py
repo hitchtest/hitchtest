@@ -37,7 +37,13 @@ def cli(filenames, yaml, quiet, results, settings, extra):
     # Load settings from file, if it exists
     if path.exists(settings_filename):
         with open(settings_filename) as settingsfile_handle:
-            settings_dict.update(pyyaml.load(settingsfile_handle.read()))
+            try:
+                settings_dict.update(pyyaml.load(settingsfile_handle.read()))
+            except pyyaml.parser.MarkedYAMLError as error:
+                warn("YAML parser error in {}:\n".format(settings_filename))
+                warn(str(error))
+                warn("\n")
+                exit(1)
 
     # Load extra settings from command line JSON
     if extra is not None:
