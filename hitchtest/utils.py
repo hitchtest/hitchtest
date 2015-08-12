@@ -7,31 +7,8 @@ import inspect
 import signal
 import shutil
 import psutil
-import sys
 import os
 import io
-
-
-def to_underscore_style(text):
-    """Changes "Something like this" to "something_like_this"."""
-    text = text.lower().replace(" ", "_").replace("-", "_")
-    return ''.join(x for x in text if x.isalpha() or x.isdigit() or x == "_")
-
-def ipython(message=None, frame=None):
-    """Launch into customized IPython with greedy autocompletion and no prompt to exit."""
-    config = IPython.Config({
-        'InteractiveShell': {'confirm_exit': False, },
-        'IPCompleter': {'greedy': True, }
-    })
-    InteractiveShellEmbed.instance(config=config)(message, local_ns=frame.f_locals, global_ns=frame.f_globals)
-
-def ipython_embed(message=None, functions_above=0):
-    frame = inspect.stack()[functions_above + 1][0]
-    ipython(message, frame)
-
-def stop_ipython():
-    from IPython.terminal.interactiveshell import TerminalInteractiveShell
-    TerminalInteractiveShell.exit_now = True
 
 
 def _write(handle, message):
@@ -51,9 +28,35 @@ def warn(message):
     import sys
     _write(sys.stderr, message)
 
+def to_underscore_style(text):
+    """Changes "Something like this" to "something_like_this"."""
+    text = text.lower().replace(" ", "_").replace("-", "_")
+    return ''.join(x for x in text if x.isalpha() or x.isdigit() or x == "_")
+
+def ipython(message=None, frame=None):
+    """Launch into customized IPython with greedy autocompletion and no prompt to exit.
+       If stdin is not tty, just issue warning message."""
+    import sys
+    if os.isatty(sys.stdin.fileno()):
+        config = IPython.Config({
+            'InteractiveShell': {'confirm_exit': False, },
+            'IPCompleter': {'greedy': True, }
+        })
+        InteractiveShellEmbed.instance(config=config)(message, local_ns=frame.f_locals, global_ns=frame.f_globals)
+    else:
+        warn("==========> IPython cannot be launched if stdin is not a tty.\n\n")
+
+def ipython_embed(message=None, functions_above=0):
+    frame = inspect.stack()[functions_above + 1][0]
+    ipython(message, frame)
+
+def stop_ipython():
+    from IPython.terminal.interactiveshell import TerminalInteractiveShell
+    TerminalInteractiveShell.exit_now = True
 
 def do_exit(signal, frame):
     """Just exit."""
+    import sys
     sys.exit(1)
 
 def signals_trigger_exit():
