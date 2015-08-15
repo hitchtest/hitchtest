@@ -1,6 +1,8 @@
 from os import path, remove, chdir, makedirs, system
 from jinja2.environment import Environment
 from jinja2 import FileSystemLoader, exceptions
+from pykwalify.errors import PyKwalifyException
+from pykwalify.core import Core
 from hitchtest.utils import warn
 from hitchtest.test import Test
 import subprocess
@@ -13,6 +15,8 @@ import imp
 import sys
 import os
 
+
+HITCHSCHEMA = path.join(path.dirname(path.realpath(__file__)), "schema.yaml")
 
 class Module(object):
     def __init__(self, filename, settings):
@@ -47,6 +51,13 @@ class Module(object):
             warn("YAML parser error in {}:\n".format(filename))
             warn(str(error))
             warn("\n")
+            sys.exit(1)
+
+        try:
+            core = Core(source_data=module_yaml_as_dict, schema_files=[HITCHSCHEMA])
+            core.validate(raise_exception=True)
+        except PyKwalifyException as error:
+            warn("YAML validation error in {}:\n==> {}\n".format(filename, error.msg))
             sys.exit(1)
 
         if len(module_yaml_as_dict) == 1:

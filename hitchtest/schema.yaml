@@ -1,0 +1,31 @@
+type: seq
+sequence:
+  - type: map
+    mapping:
+      "name":
+        type: str
+        required: false
+      "description":
+        type: str
+        required: false
+      "scenario":
+        type: seq
+        sequence:
+          - type: any
+        required: true
+      "preconditions":
+        type: any
+        required: false
+      "tags":
+        type: seq
+        required: false
+        sequence:
+          - type: str
+      "features":
+        type: seq
+        required: false
+        sequence:
+          - type: str
+      "engine":
+        type: str
+        required: false
