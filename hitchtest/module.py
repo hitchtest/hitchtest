@@ -1,6 +1,6 @@
 from os import path, remove, chdir, makedirs, system
 from jinja2.environment import Environment
-from jinja2 import FileSystemLoader
+from jinja2 import FileSystemLoader, exceptions
 from hitchtest.utils import warn
 from hitchtest.test import Test
 import subprocess
@@ -31,7 +31,13 @@ class Module(object):
 
         env = Environment()
         env.loader = FileSystemLoader(path.split(filename)[0])
-        tmpl = env.get_template(path.split(filename)[1])
+        try:
+            tmpl = env.get_template(path.split(filename)[1])
+        except exceptions.TemplateError as error:
+            warn("Jinja2 template error in '{}' on line {}:\n==> {}\n".format(
+                error.filename, error.lineno, str(error)
+            ))
+            sys.exit(1)
         self.test_yaml_text = tmpl.render(**self.settings)
 
         self.tests = []
