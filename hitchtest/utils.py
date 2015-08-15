@@ -1,4 +1,5 @@
 from IPython.terminal.embed import InteractiveShellEmbed
+from traitlets.config.loader import Config
 import functools
 import patoolib
 import requests
@@ -38,7 +39,7 @@ def ipython(message=None, frame=None):
        If stdin is not tty, just issue warning message."""
     import sys
     if os.isatty(sys.stdin.fileno()):
-        config = IPython.Config({
+        config = Config({
             'InteractiveShell': {'confirm_exit': False, },
             'IPCompleter': {'greedy': True, }
         })
@@ -126,3 +127,9 @@ def download_file(downloaded_file_name, url):
     else:
         log("Downloaded : {} already found\n".format(downloaded_file_name))
 
+def get_hitch_directory():
+    """Get the hitch directory by working backwards from the virtualenv python."""
+    import sys
+    return os.path.abspath(
+        os.path.join(path.dirname(sys.executable), "..", "..")
+    )
