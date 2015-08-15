@@ -17,24 +17,22 @@ class HitchPackage(object):
     def __init__(self):
 
         # 3 directories above virtualenv python binary is the hitchdir
-        self.hitch_dir = path.abspath(
-            path.join(path.dirname(sys.executable), "..", "..")
+        self.hitch_package_directory = path.abspath(
+            path.join(path.expanduser("~"), ".hitchpkg")
         )
 
         if self.name is None:
             raise PackageVerificationFailure("This package does not have self.name set!")
 
     def get_build_directory(self):
-        build_directory = path.join(self.hitch_dir, "build")
-        if not path.exists(build_directory):
-            makedirs(build_directory)
-        return build_directory
+        if not path.exists(self.hitch_package_directory):
+            makedirs(self.hitch_package_directory)
+        return self.hitch_package_directory
 
     def get_downloads_directory(self):
-        downloads_directory = path.join(self.hitch_dir, "downloads")
-        if not path.exists(downloads_directory):
-            makedirs(downloads_directory)
-        return downloads_directory
+        if not path.exists(self.hitch_package_directory):
+            makedirs(self.hitch_package_directory)
+        return self.hitch_package_directory
 
     def check_version(self, version, versions_list, issues_url, name=None):
         package_name = self.name if name is None else name
@@ -42,7 +40,9 @@ class HitchPackage(object):
             raise InvalidPackageVersion(
                 "{} version {} not in list of approved versions: \n{}\n"
                 "Raise a ticket at {} "
-                "if you think it should be.".format(package_name, version, versions_list, issues_url)
+                "if you think it should be.".format(
+                    package_name, version, versions_list, issues_url
+                )
             )
         return version
 
