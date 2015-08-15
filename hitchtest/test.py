@@ -15,7 +15,7 @@ class Test(object):
         self.settings = settings
         self.filename = filename
         self.name = yaml_test.get('name', title)
-        self.engine = yaml_test.get('engine', '')
+        self.engine = yaml_test.get('engine', 'engine.py:ExecutionEngine')
         self.description = yaml_test.get('description')
         self.preconditions = yaml_test.get('preconditions')
         self.tags = yaml_test.get('tags')
