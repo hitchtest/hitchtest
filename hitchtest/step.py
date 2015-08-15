@@ -1,6 +1,8 @@
 from hitchtest.arguments import Arguments
 from hitchtest import utils
 
+class StepNotFound(Exception):
+    pass
 
 class Step(object):
     def __init__(self, yaml_step, index):
@@ -24,9 +26,12 @@ class Step(object):
         return {'index': self.index, 'name': self.name, 'arguments': self.arguments.to_dict(), }
 
     def run(self, engine):
-        if self.arguments.is_none:
-            getattr(engine, self.underscore_case_name())()
-        elif self.arguments.single_argument:
-            getattr(engine, self.underscore_case_name())(self.arguments.argument)
+        if hasattr(engine, self.underscore_case_name()):
+            if self.arguments.is_none:
+                getattr(engine, self.underscore_case_name())()
+            elif self.arguments.single_argument:
+                getattr(engine, self.underscore_case_name())(self.arguments.argument)
+            else:
+                getattr(engine, self.underscore_case_name())(**self.arguments.pythonized_kwargs())
         else:
-            getattr(engine, self.underscore_case_name())(**self.arguments.pythonized_kwargs())
+            raise StepNotFound("Step with name '{}' not found in execution engine.".format(self.underscore_case_name()))

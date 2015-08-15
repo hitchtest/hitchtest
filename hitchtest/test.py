@@ -109,7 +109,7 @@ class Test(object):
                 stacktrace = HitchStacktrace(self, TestPosition.TEARDOWN, show_hitch_stacktrace)
 
         duration = time.time() - start_time
-        dict_stacktrace = stacktrace.to_dict() if stacktrace else None
+        dict_stacktrace = stacktrace.to_dict() if stacktrace is not None else None
         aborted = engine.aborted if engine is not None else False
         result = Result(self, failure, duration, stacktrace=dict_stacktrace, aborted=aborted)
         return result
