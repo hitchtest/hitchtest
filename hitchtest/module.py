@@ -43,7 +43,7 @@ class Module(object):
         self.tests = []
         try:
             module_yaml_as_dict = yaml.load(self.test_yaml_text)
-        except pyyaml.parser.MarkedYAMLError as error:
+        except yaml.parser.MarkedYAMLError as error:
             warn("YAML parser error in {}:\n".format(filename))
             warn(str(error))
             warn("\n")
