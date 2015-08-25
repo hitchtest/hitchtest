@@ -11,16 +11,14 @@ import signal
 import json
 
 
-# TODO : Remove --results and put the setting in to settings instead.
-
 @command()
 @argument('filenames', nargs=-1)
 @option('-y', '--yaml', is_flag=True, help='Output the YAML tests (for debugging).')
 @option('-q', '--quiet', is_flag=True, help='Quiet mode. Do not print test output to screen.')
-@option('-r', '--results', default=None, help='Specify a template to display test results with.')
+@option('-t', '--tags', default=None, help='Only run tests with comma-separated specified tag(s). (e.g. --tags tag-1,tag-2,tag.3)')
 @option('-s', '--settings', default=None, help="Load settings from specified file.")
 @option('-e', '--extra', default=None, help="""Load extra settings on command line as JSON (e.g. --extra '{"postgres_version": "3.5.5"}'""")
-def cli(filenames, yaml, quiet, results, settings, extra):
+def cli(filenames, yaml, quiet, tags, settings, extra):
     """Run test files or entire directories containing .test files."""
     # .hitch/virtualenv/bin/python <- 4 directories up from where the python exec resides
     engine_folder = path.abspath(path.join(executable, "..", "..", "..", ".."))
@@ -81,18 +79,27 @@ def cli(filenames, yaml, quiet, results, settings, extra):
         if filename.endswith(".test"):
             test_modules.append(module.Module(filename, settings_dict))
         else:
-            warn("I didn't understand {}\n".format(filename))
+            warn(
+                "Tests must have the extension .test"
+                "- '{}' doesn't have that extension\n".format(filename)
+            )
             exit(1)
 
-    test_suite = suite.Suite(test_modules, settings_dict)
+    test_suite = suite.Suite(test_modules, settings_dict, tags)
 
     if yaml:
         test_suite.printyaml()
     else:
         returned_results = test_suite.run(quiet=quiet)
+
         # Lines must be split to prevent stdout blocking
-        for line in returned_results.to_template(template=results).split('\n'):
+        result_lines = returned_results.to_template(
+            template=settings_dict.get('results_template', None)
+        ).split('\n')
+
+        for line in result_lines:
             log("{}\n".format(line))
+
         exit(1 if len(returned_results.failures()) > 0 else 0)
 
 def run():

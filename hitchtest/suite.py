@@ -13,14 +13,24 @@ import os
 
 class Suite(object):
     """A group of tests defined at runtime."""
-    def __init__(self, test_modules, settings):
+    def __init__(self, test_modules, settings, tags):
         self.test_modules = test_modules
         self.settings = settings
+        self.tags = set(tags.split(",")) if tags is not None else None
 
     def tests(self):
-        test_list = []
+        """Get the full list of tests in the specified suite."""
+        full_test_list = []
         for test_module in self.test_modules:
-            test_list.extend(test_module.tests)
+            full_test_list.extend(test_module.tests)
+        test_list = []
+        if self.tags is not None:
+            for test in full_test_list:
+                if test.tags is not None:
+                    if set(test.tags).issuperset(self.tags):
+                        test_list.append(test)
+        else:
+            test_list = full_test_list
         return test_list
 
     def printyaml(self):
