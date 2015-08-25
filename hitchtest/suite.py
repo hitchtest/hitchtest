@@ -110,7 +110,8 @@ class Suite(object):
                 try:
                     proc.wait(timeout=test_shutdown_timeout)
                 except psutil.TimeoutExpired:
-                    # TODO: kill all processes
+                    for child in proc.get_children(recursive=True):
+                        child.send_signal(signal.SIGKILL)
                     proc.send_signal(signal.SIGKILL)
 
 
