@@ -36,7 +36,7 @@ class HitchPackage(object):
 
     def check_version(self, version, versions_list, issues_url, name=None):
         package_name = self.name if name is None else name
-        if version not in versions_list:
+        if str(version) not in versions_list:
             raise InvalidPackageVersion(
                 "{} version {} not in list of approved versions: \n{}\n"
                 "Raise a ticket at {} "
