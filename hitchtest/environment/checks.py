@@ -1,6 +1,7 @@
 from hitchtest.environment.utils import version_comparison, return_code_zero, check_output_lines
 from collections import Counter
 from os import path
+import unixpackage
 import struct
 import psutil
 import sys
@@ -30,6 +31,16 @@ def freeports(required_ports):
             "Required network port(s): {} not usable.".format(', '.join(unusable_ports))
         )
 
+def packages(package_list):
+    """Verify that a list of unixpackage packages are installed."""
+    if not unixpackage.packages_installed(package_list):
+        unixpackage.install(package_list)
+        if not unixpackage_packages_installed(package_list):
+            raise HitchEnvironmentException((
+                "The following packages are required: {}.\n"
+                "The command to install them on this environment is: {}.\n"
+            ).format(', '.join(package_list), unixpackage.install_command(package_list)))
+
 def debs(packages):
     """Verify that a list of debs are installed. Ignore if not a deb based system."""
     if len(packages) > 10:
@@ -44,7 +55,9 @@ def debs(packages):
 def brew(packages):
     """Verify that a list of brew packages are installed. Ignore if not a mac."""
     if sys.platform == "darwin":
-        version_list = [x for x in check_output_lines(["brew", "list", "--versions"] + packages) if x != ""]
+        version_list = [
+            x for x in check_output_lines(["brew", "list", "--versions"] + packages) if x != ""
+        ]
         if len(version_list) < len(packages):
             raise HitchEnvironmentException(
                 "brew install {} : required for test to run".format(' '.join(packages))
