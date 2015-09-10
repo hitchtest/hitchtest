@@ -131,5 +131,5 @@ def get_hitch_directory():
     """Get the hitch directory by working backwards from the virtualenv python."""
     import sys
     return os.path.abspath(
-        os.path.join(path.dirname(sys.executable), "..", "..")
+        os.path.join(os.path.dirname(sys.executable), "..", "..")
     )
