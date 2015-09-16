@@ -6,10 +6,12 @@ import struct
 import psutil
 import sys
 import re
+import os
 
 
 class HitchEnvironmentException(Exception):
     pass
+
 
 def freeports(required_ports):
     """Verifies that none of the required_ports are not in use. Raise exception if they are."""
@@ -31,6 +33,7 @@ def freeports(required_ports):
             "Required network port(s): {} not usable.".format(', '.join(unusable_ports))
         )
 
+
 def packages(package_list):
     """Verify that a list of unixpackage packages are installed."""
     if not unixpackage.packages_installed(package_list):
@@ -40,6 +43,7 @@ def packages(package_list):
                 "The following packages are required: {}.\n"
                 "The command to install them on this environment is: {}.\n"
             ).format(', '.join(package_list), unixpackage.install_command(package_list)))
+
 
 def debs(packages):
     """Verify that a list of debs are installed. Ignore if not a deb based system."""
@@ -52,6 +56,7 @@ def debs(packages):
                 "sudo apt-get install {} : required for test to run".format(' '.join(packages))
             )
 
+
 def brew(packages):
     """Verify that a list of brew packages are installed. Ignore if not a mac."""
     if sys.platform == "darwin":
@@ -63,12 +68,14 @@ def brew(packages):
                 "brew install {} : required for test to run".format(' '.join(packages))
             )
 
+
 def systembits(bits):
     """Verify that a system is 64 or 32 bit."""
     if not bits == struct.calcsize("P") * 8:
         raise HitchEnvironmentException(
             "{} bit system required to run test. This system is {} bit".format(str(bits))
         )
+
 
 def internet_detected_after(timeout):
     """Verify that a system is connected to the internet."""
@@ -77,11 +84,22 @@ def internet_detected_after(timeout):
             "No internet detected after {} seconds. Ping failed.".format(timeout)
         )
 
+
 def approved_platforms(platforms):
     """Verify that the test is running on an approved platform."""
     if not sys.platform in platforms:
         raise HitchEnvironmentException(
             "This platform is {}. This test will only run on {}.".format(' '.format(platforms))
+        )
+
+
+def x_available(true_or_false):
+    """Checks if DISPLAY enviroment variable is set, hence that X is available."""
+    if "DISPLAY" not in os.environ:
+        raise HitchEnvironmentException(
+            """The DISPLAY environment variable is not set. See """
+            """https://stackoverflow.com/questions/784404/how-can-i-specify-a-display """
+            """for more details about what to do to fix this issue."""
         )
 
 
