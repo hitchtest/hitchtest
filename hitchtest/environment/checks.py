@@ -85,6 +85,23 @@ def approved_platforms(platforms):
         )
 
 
+def i_am_root(true_or_false):
+    """Verify that the user running this test either is, or is not, root."""
+    import getpass
+    if getpass.getuser() == "root" and not true_or_false:
+        raise HitchEnvironmentException(
+            """The current user is root. You must run hitch clean and then """
+            """try running the test(s) again as a non-root user."""
+        )
+
+    if getpass.getuser() != "root" and true_or_false:
+        raise HitchEnvironmentException(
+            """The current user is *not* root. You must run hitch clean and then """
+            """try running the test(s) again as the root user."""
+        )
+
+
+
 # TODO : rpm package availability.
 # TODO : arch package availability.
 # TODO : all other package managers
