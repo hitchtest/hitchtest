@@ -37,7 +37,7 @@ def freeports(required_ports):
 def packages(package_list):
     """Verify that a list of unixpackage packages are installed."""
     if not unixpackage.packages_installed(package_list):
-        unixpackage.install(package_list)
+        unixpackage.install(package_list, polite=True)
         if not unixpackage_packages_installed(package_list):
             raise HitchEnvironmentException((
                 "The following packages are required: {}.\n"
