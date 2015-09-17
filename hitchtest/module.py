@@ -33,6 +33,11 @@ class Module(object):
         else:
             self.settings = settings
 
+        with open(filename, "r") as file_handle:
+            if file_handle.read() == "":
+                warn("{0} is an empty file.\n".format(filename))
+                sys.exit(1)
+
         env = Environment()
         env.loader = FileSystemLoader(path.split(filename)[0])
         try:
@@ -43,6 +48,13 @@ class Module(object):
             ))
             sys.exit(1)
         self.test_yaml_text = tmpl.render(**self.settings)
+
+        if self.test_yaml_text == "":
+            warn((
+                "{0} rendered as an empty file. "
+                "There is probably a problem with your jinja2 template.\n"
+            ).format(filename))
+            sys.exit(1)
 
         self.tests = []
         try:
