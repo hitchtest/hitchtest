@@ -72,9 +72,8 @@ class Suite(object):
             if not quiet:
                 try:
                     orig_stdin_termios = termios.tcgetattr(sys.stdin.fileno())
-                except termios.error as error:
-                    if error.args[0] == 25:
-                        orig_stdin_termios = None
+                except termios.error:
+                    orig_stdin_termios = None
                 orig_stdin_fileno = sys.stdin.fileno()
             orig_pgid = os.getpgrp()
 
