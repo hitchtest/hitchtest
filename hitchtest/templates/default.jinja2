@@ -5,7 +5,7 @@
 {% include 'stacktrace_default.jinja2' with context %}
 {% endfor %}
 
-{{ Fore.RED }}{{ Style.BRIGHT}}FAILED IN {{ results.duration|round(1, 'floor') }} seconds{{ Style.RESET_ALL}}{{ Fore.RESET }}
+{{ Fore.RED }}{{ Style.BRIGHT }}FAILED IN {{ results.duration|round(1, 'floor') }} seconds{{ Style.RESET_ALL}}{{ Fore.RESET }}
 {% else %}
 {{ Fore.GREEN }}TEST PASSED IN {{ results.duration|round(1, 'floor') }} seconds{{ Fore.RESET }}
 {% endif %}

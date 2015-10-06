@@ -1,9 +1,27 @@
-{{ Fore.BLUE }}{{ Style.BRIGHT }}
-{% if stacktrace.where == TestPosition.SETUP %}Exception occurred in {{ stacktrace.test.name }} ({{ stacktrace.test.filename }}) setup.
-{% elif stacktrace.where == TestPosition.TEARDOWN %}Exception occurred in {{ stacktrace.test.name }} ({{ stacktrace.test.filename }}) teardown.
-{% elif stacktrace.where == TestPosition.ON_FAILURE %}Exception occurred in {{ stacktrace.test.name }} ({{ stacktrace.test.filename }}) on_failure.
-{% elif stacktrace.where == TestPosition.ON_SUCCESS %}Exception occurred in {{ stacktrace.test.name }} ({{ stacktrace.test.filename }}) on_success.
-{% elif stacktrace.where == TestPosition.STEP %}Exception occurred in "{{ stacktrace.test.name }}" (step {{ stacktrace.step.index }}: "{{ stacktrace.step.name }}").
+{{ Fore.BLUE }}{{ Style.BRIGHT }}{% if stacktrace.where == TestPosition.SETUP
+
+  %}Exception occurred in {{ stacktrace.test.name }} setup
+    {{ stacktrace.test.filename }}{{ Style.NORMAL }}
+{% elif stacktrace.where == TestPosition.TEARDOWN
+
+  %}Exception occurred in {{ Style.BRIGHT }}{{ stacktrace.test.name }} teardown.
+    {{ stacktrace.test.filename }}{{ Style.NORMAL }}
+{% elif stacktrace.where == TestPosition.ON_FAILURE
+
+  %}Exception occurred in {{ Style.BRIGHT }}{{ stacktrace.test.name }} on_failure.
+    {{ stacktrace.test.filename }}{{ Style.NORMAL }}
+{% elif stacktrace.where == TestPosition.ON_SUCCESS
+
+  %}Exception occurred in {{ Style.BRIGHT }}{{ stacktrace.test.name }} on_success.
+    {{ stacktrace.test.filename }}{{ Style.NORMAL }}
+{% elif stacktrace.where == TestPosition.STEP
+
+  %}Exception occurred in "{{ Style.BRIGHT }}{{ stacktrace.test.name }}":
+    {{ stacktrace.test.filename }}{{ Style.NORMAL }}
+
+    {% if stacktrace.previous_step %}{{ stacktrace.step.index - 1 }}: {{ stacktrace.previous_step.yaml|indent(6) }}{% endif %}
+{{ Style.BRIGHT }}--> {{ stacktrace.step.index }}: {{ stacktrace.step.yaml|indent(6) }}{{ Style.NORMAL }}
+    {% if stacktrace.next_step %}{{ stacktrace.step.index + 1 }}: {{ stacktrace.next_step.yaml|indent(6) }}{% endif %}
 {% endif %}{{ Style.RESET_ALL }}{{ Fore.RESET }}
 {% for traceback in stacktrace.tracebacks %}
 [{{ traceback.id }}]: function '{{ Style.BRIGHT }}{{ traceback.function }}{{ Style.RESET_ALL }}'   ( self.stacktrace[{{traceback.id}}].ipython() )

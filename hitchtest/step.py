@@ -1,5 +1,7 @@
 from hitchtest.arguments import Arguments
 from hitchtest import utils
+import yaml
+
 
 class StepNotFound(Exception):
     pass
@@ -22,8 +24,19 @@ class Step(object):
     def underscore_case_name(self):
         return utils.to_underscore_style(self.name)
 
+    def as_yaml(self):
+        if self.arguments.is_none:
+            return yaml.dump([self.name], default_flow_style=False).rstrip()
+        else:
+            return yaml.dump([{self.name: self.arguments.to_dict(), }], default_flow_style=False).rstrip()
+
     def to_dict(self):
-        return {'index': self.index, 'name': self.name, 'arguments': self.arguments.to_dict(), }
+        return {
+            'index': self.index,
+            'name': self.name,
+            'arguments': self.arguments.to_dict(),
+            'yaml': self.as_yaml(),
+        }
 
     def run(self, engine):
         if hasattr(engine, self.underscore_case_name()):

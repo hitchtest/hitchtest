@@ -24,6 +24,14 @@ class HitchStacktrace(object):
         self.tracebacks = []
         self.test = test
         self.where = where
+        if step is not None:
+            self.previous_step = test.scenario.steps[step.index - 2] \
+                if step.index > 1 else None
+            self.next_step = test.scenario.steps[step.index] \
+                if step.index < len(test.scenario.steps) else None
+        else:
+            self.previous_step = None
+            self.next_step = None
         self.step = step
         self.show_hitch_stacktrace = show_hitch_stacktrace
         tb_id = 0
@@ -59,7 +67,9 @@ class HitchStacktrace(object):
     def to_dict(self):
         return {
             'test': self.test.to_dict(),
+            'previous_step': self.previous_step.to_dict() if self.previous_step is not None else None,
             'step': self.step.to_dict() if self.step else None,
+            'next_step': self.next_step.to_dict() if self.next_step is not None else None,
             'where': self.where,
             'tracebacks': [traceback.to_dict() for traceback in self.tracebacks],
             'exception': str(self.exception),
