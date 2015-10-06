@@ -17,7 +17,7 @@ class Test(object):
         self.name = yaml_test.get('name', title)
         self.engine = yaml_test.get('engine', 'engine.py:ExecutionEngine')
         self.description = yaml_test.get('description')
-        self.preconditions = yaml_test.get('preconditions')
+        self.preconditions = yaml_test.get('preconditions', {})
         self.tags = yaml_test.get('tags')
         self.features = yaml_test.get('features')
         self.scenario = Scenario(yaml_test.get('scenario', []))
