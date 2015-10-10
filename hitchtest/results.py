@@ -9,8 +9,9 @@ import sys
 TEMPLATE_DIR = path.join(path.dirname(path.realpath(__file__)), "templates")
 
 class Results(object):
-    def __init__(self, result_list):
+    def __init__(self, result_list, failedfast):
         self.result_list = result_list
+        self.failedfast = failedfast
 
     def failures(self):
         return [result for result in self.result_list if result.failure]
@@ -24,6 +25,7 @@ class Results(object):
             'total_failures': len(self.failures()),
             'duration': sum([result.duration for result in self.result_list]),
             'failures': [result.to_dict() for result in self.failures()],
+            'failedfast': self.failedfast,
         }
 
     def to_json(self):

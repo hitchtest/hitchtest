@@ -44,6 +44,7 @@ class Suite(object):
     def run(self, quiet=False):
         """Run all tests in the defined suite of modules."""
         tests = self.tests()
+        failedfast = False
         result_list = []
 
         for test in tests:
@@ -158,4 +159,8 @@ class Suite(object):
             if result.aborted:
                 warn("Aborted\n")
                 sys.exit(1)
-        return Results(result_list)
+
+            if self.settings.get('failfast', False) and result.failure:
+                failedfast = True
+                break
+        return Results(result_list, failedfast)
