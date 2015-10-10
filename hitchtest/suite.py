@@ -163,4 +163,4 @@ class Suite(object):
             if self.settings.get('failfast', False) and result.failure:
                 failedfast = True
                 break
-        return Results(result_list, failedfast)
+        return Results(result_list, failedfast, self.settings.get('colorless', False))

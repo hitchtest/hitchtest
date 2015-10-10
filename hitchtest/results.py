@@ -9,9 +9,10 @@ import sys
 TEMPLATE_DIR = path.join(path.dirname(path.realpath(__file__)), "templates")
 
 class Results(object):
-    def __init__(self, result_list, failedfast):
+    def __init__(self, result_list, failedfast, colorless):
         self.result_list = result_list
         self.failedfast = failedfast
+        self.colorless = colorless
 
     def failures(self):
         return [result for result in self.result_list if result.failure]
@@ -40,8 +41,8 @@ class Results(object):
         return tmpl.render(
             results=self.to_dict(),
             json=self.to_json(),
-            Fore=colorama.Fore,
-            Back=colorama.Back,
-            Style=colorama.Style,
+            Fore=colorama.Fore if not self.colorless else '',
+            Back=colorama.Back if not self.colorless else '',
+            Style=colorama.Style if not self.colorless else '',
             TestPosition=TestPosition,
         )
