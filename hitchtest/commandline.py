@@ -10,11 +10,30 @@ import fnmatch
 import signal
 import json
 
+def _overwrite_settings_with_yaml(settings_filename, settings_dict):
+    """Load YAML and overwrite """
+    if path.exists(settings_filename):
+        with open(settings_filename) as settingsfile_handle:
+            settingsfile_contents = settingsfile_handle.read()
+
+        try:
+            settings_dict.update(pyyaml.load(settingsfile_contents))
+        except pyyaml.parser.MarkedYAMLError as error:
+            warn("YAML parser error in {}:\n{}\nError:{}\n".format(
+                settings_filename, settingsfile_contents, str(error),
+            ))
+            exit(1)
+        except ValueError:
+            warn("YAML parser error in {}. Should be associative array not list:\n\n{}\n".format(
+                settings_filename, settingsfile_contents,
+            ))
+            exit(1)
+
 
 @command()
 @argument('filenames', nargs=-1)
 @option('-y', '--yaml', is_flag=True, help='Output the YAML tests (for debugging).')
-@option('-q', '--quiet', is_flag=True, help='Quiet mode. Do not print test output to screen.')
+@option('-q', '--quiet', is_flag=True, help='Quiet mode. Do not print test output to screen. (DEPRECATED)')
 @option('-t', '--tags', default=None, help='Only run tests with comma-separated specified tag(s). (e.g. --tags tag-1,tag-2,tag.3)')
 @option('-s', '--settings', default=None, help="Load settings from specified file.")
 @option('-e', '--extra', default=None, help="""Load extra settings on command line as JSON (e.g. --extra '{"postgres_version": "3.5.5"}'""")
@@ -22,33 +41,51 @@ def cli(filenames, yaml, quiet, tags, settings, extra):
     """Run test files or entire directories containing .test files."""
     # .hitch/virtualenv/bin/python <- 4 directories up from where the python exec resides
     engine_folder = path.abspath(path.join(executable, "..", "..", "..", ".."))
-    settings_dict = {'engine_folder': engine_folder, 'quiet': quiet, }
+    settings_dict = {'engine_folder': engine_folder, 'quiet': False}
     filenames = [path.abspath(path.relpath(filename, engine_folder)) for filename in filenames]
     chdir(engine_folder)
-    default_settings_filename = path.join(engine_folder, "settings.yml")
-    settings_filename = default_settings_filename if settings is None else path.join(engine_folder, settings)
 
-    if settings is not None and not path.exists(settings_filename):
-        warn("Settings file '{}' could not be found!\n".format(settings_filename))
+    if path.exists(path.join(engine_folder, "settings.yml")):
+        warn((
+            "settings.yml as a 'default settings' file has been deprecated. "
+            "Rename to all.settings instead:\n\n"
+            "See here for more details on the change : \n"
+            "https://hitchtest.readthedocs.org/en/latest/faq/why_was_hitch_behavior_changed.html\n"
+        ))
         exit(1)
 
-    # Load settings from file, if it exists
-    if path.exists(settings_filename):
-        with open(settings_filename) as settingsfile_handle:
-            try:
-                settings_dict.update(pyyaml.load(settingsfile_handle.read()))
-            except pyyaml.parser.MarkedYAMLError as error:
-                warn("YAML parser error in {}:\n".format(settings_filename))
-                warn(str(error))
-                warn("\n")
-                exit(1)
+    if quiet:
+        warn((
+            "The --quiet switch has been deprecated. You can make your tests run quietly "
+            "by setting the property quiet to True via --extra or in a settings file.\n\n"
+            "See here for more details on the change : \n"
+            "https://hitchtest.readthedocs.org/en/latest/faq/why_was_hitch_behavior_changed.html\n"
+        ))
+        exit(1)
 
-    # Load extra settings from command line JSON
+    new_default_settings_filename = path.join(engine_folder, "all.settings")
+    settings_filename = None if settings is None else path.join(engine_folder, settings)
+
+    if path.exists(new_default_settings_filename):
+        _overwrite_settings_with_yaml(new_default_settings_filename, settings_dict)
+
+    if settings_filename is not None:
+        if not path.exists(settings_filename):
+            warn("Settings file '{}' could not be found!\n".format(settings_filename))
+            exit(1)
+        else:
+            # Load settings from specified file, if it exists
+            _overwrite_settings_with_yaml(settings_filename, settings_dict)
+
+    # Load extra settings from command line JSON and overwrite what's already set
     if extra is not None:
         try:
             settings_dict.update(json.loads(extra).items())
         except ValueError as error:
             warn("""{} in:\n ==> --extra '{}' (must be valid JSON)\n""".format(str(error), extra))
+            exit(1)
+        except AttributeError:
+            warn("""Error in:\n ==> --extra '{}' (must be valid JSON and not a list)\n""".format(extra))
             exit(1)
 
     if len(filenames) == 0:
