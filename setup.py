@@ -13,7 +13,7 @@ def read(*parts):
     return codecs.open(os.path.join(os.path.abspath(os.path.dirname(__file__)), *parts), 'r').read()
 
 setup(name="hitchtest",
-      version="0.9.0",
+      version="0.9.1",
       description="Declarative test runner using YAML and jinja2.",
       long_description=read('README.rst'),
       classifiers=[
