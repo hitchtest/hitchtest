@@ -8,6 +8,7 @@ from hitchtest.utils import to_underscore_style, ipython, ipython_embed
 from hitchtest import commandline
 from hitchtest.settings import Settings
 from hitchtest.package import HitchPackage
+from hitchtest.modified import is_modified
 from os import path
 
 
