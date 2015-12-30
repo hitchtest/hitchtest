@@ -41,13 +41,13 @@ class Module(object):
         env = Environment()
         env.loader = FileSystemLoader(path.split(filename)[0])
         try:
-            tmpl = env.get_template(path.split(filename)[1])
+            template = env.get_template(path.split(filename)[1])
         except exceptions.TemplateError as error:
             warn("Jinja2 template error in '{}' on line {}:\n==> {}\n".format(
                 error.filename, error.lineno, str(error)
             ))
             sys.exit(1)
-        self.test_yaml_text = tmpl.render(**self.settings)
+        self.test_yaml_text = template.render(**self.settings.as_dict())
 
         if self.test_yaml_text == "":
             warn((

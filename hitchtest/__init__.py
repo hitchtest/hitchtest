@@ -6,6 +6,7 @@ from hitchtest.test import Test
 from hitchtest.module import Module
 from hitchtest.utils import to_underscore_style, ipython, ipython_embed
 from hitchtest import commandline
+from hitchtest.settings import Settings
 from hitchtest.package import HitchPackage
 from os import path
 
