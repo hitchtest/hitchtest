@@ -25,15 +25,16 @@ def is_modified(includes, excludes=None):
 
     filenames = list(set(includes) - set(excludes))
     
-    for filename in filenames:
-        modified_time = path.getmtime(filename)
+    for relfilename in filenames:
+        absfilename = path.abspath(relfilename)
+        modified_time = path.getmtime(absfilename)
         
-        if filename in modifications:
-            if modified_time > modifications[filename]:
-                modifications[filename] = modified_time
+        if absfilename in modifications:
+            if modified_time > modifications[absfilename]:
+                modifications[absfilename] = modified_time
                 at_least_one_modified = True
         else:
-            modifications[filename] = modified_time
+            modifications[absfilename] = modified_time
             at_least_one_modified = True
 
     with open(modififications_filename, 'w') as modifications_file_handle:
