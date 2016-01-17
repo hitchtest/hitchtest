@@ -9,6 +9,8 @@ from hitchtest import commandline
 from hitchtest.settings import Settings
 from hitchtest.package import HitchPackage
 from hitchtest.modified import is_modified
+from hitchtest.snapdir import snapshot
+from hitchtest.snapdir import restore
 from os import path
 
 
