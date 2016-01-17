@@ -79,7 +79,8 @@ def cli(filenames, yaml, quiet, tags, settings, extra):
         if path.isdir(filename):
             for root, dirnames, filenames_in_dir in walk(filename):
                 for filename_in_dir in fnmatch.filter(filenames_in_dir, '*.test'):
-                    matches.append(path.join(root, filename_in_dir))
+                    if ".hitch" not in root: # Ignore everything in .hitch
+                        matches.append(path.join(root, filename_in_dir))
         else:
             matches.append(filename)
 
