@@ -62,6 +62,8 @@ def cli(filenames, yaml, quiet, tags, settings, extra):
 
     settings_dict = Settings(engine_folder, settings, extra)
     settings_dict['engine_folder'] = engine_folder
+    if 'quiet' not in settings_dict:
+        settings_dict['quiet'] = False
 
     if len(filenames) == 0:
         warn("No tests specified.\n")
