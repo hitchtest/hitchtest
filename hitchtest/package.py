@@ -1,5 +1,7 @@
+from commandlib import Commands
 from os import path, makedirs
 import sys
+
 
 class PackageNotBuilt(Exception):
     pass
@@ -57,3 +59,7 @@ class HitchPackage(object):
 
     def verify(self):
         pass
+    
+    @property
+    def cmd(self):
+        return Commands(self.bin_directory)
