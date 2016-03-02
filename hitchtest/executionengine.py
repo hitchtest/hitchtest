@@ -13,6 +13,14 @@ class HitchPathError(Exception):
     pass
 
 
+#class HitchStatePath(Path):
+    #def snapshot(path, name=None):
+        ##self.abspath()
+    
+    #def restore(path, name=None):
+        ##self.abspath()
+
+
 class Paths(object):
     def __init__(self):
         self.hitch = Path(utils.get_hitch_directory())

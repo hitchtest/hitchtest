@@ -1,8 +1,53 @@
 from os import path, makedirs
 from hitchtest.utils import get_hitch_directory
+from path import Path
 import json
 
-class is_modified(object):
+
+HOW_TO_USE_MODIFICATION_CHECKER = """\
+You cannot treat monitor as a boolean.
+
+It must be used as a context manager like so:
+
+from hitchtest import monitor
+
+with monitor([filename1, filename2...]) as changed:
+    if changed:
+        # run command
+    else:
+        # don't run command
+"""
+
+
+class Changed(object):
+    """
+    Object representation of what the monitor has changed.
+    
+    len(changes) == number of files changed
+    if changes: -> True if at least one file has changed
+    
+    for change in changes:
+        print(change)
+    """
+    def __init__(self, filenames):
+        self._filenames = filenames
+    
+    def __len__(self):
+        return len(self._filenames)
+    
+    def __getitem__(self, index):
+        return Path(self._filenames[index])
+    
+    def __nonzero__(self):
+        return len(self._filenames) > 0
+    
+    def __bool__(self):
+        return len(self._filenames) > 0
+    
+    
+
+
+class monitor(object):
     def __init__(self, includes, excludes=None):
         self.includes = [includes, ] if type(includes) is str else includes
         self.excludes = excludes if excludes is not None else []
@@ -16,7 +61,7 @@ class is_modified(object):
         else:
             self.modifications = {}
 
-        at_least_one_modified = False
+        list_of_modified_filenames = []
 
         # Total list of filenames
         filenames = list(set(self.includes) - set(self.excludes))
@@ -29,12 +74,12 @@ class is_modified(object):
             if absfilename in self.modifications:
                 if modified_time > self.modifications[absfilename]:
                     self.modifications[absfilename] = modified_time
-                    at_least_one_modified = True
+                    list_of_modified_filenames.append(absfilename)
             else:
                 self.modifications[absfilename] = modified_time
-                at_least_one_modified = True
+                list_of_modified_filenames.append(absfilename)
 
-        return at_least_one_modified
+        return Changed(list_of_modified_filenames)
 
     def __exit__(self, type, value, traceback):
         # If an exception is thrown, don't update modifications
@@ -53,3 +98,11 @@ class is_modified(object):
             
             with open(self.modififications_filename, 'w') as handle:
                 handle.write(json.dumps(self.modifications))
+
+    def __bool__(self):
+        raise NotImplementedError(HOW_TO_USE_MODIFICATION_CHECKER)
+
+    def __nonzero__(self):
+        raise NotImplementedError(HOW_TO_USE_MODIFICATION_CHECKER)
+    
+is_modified = monitor
