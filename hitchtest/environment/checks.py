@@ -1,9 +1,9 @@
 from hitchtest.environment.utils import version_comparison, return_code_zero, check_output_lines
 from collections import Counter
-from os import path
 import unixpackage
 import struct
 import psutil
+import glob
 import sys
 import re
 import os
@@ -116,6 +116,39 @@ def i_am_root(true_or_false):
             """try running the test(s) again as the root user."""
         )
 
+
+def need_free_inotify_watches(number_of_watches_needed):
+    """
+    Verify that enough inotify watches are available. Raise exception if they are not.
+
+    Only valid on linux, so skipped on non-linux platforms.
+    """
+    from path import Path
+    if "linux" in sys.platform:
+        max_user_watches = int(
+            Path("/proc/sys/fs/inotify/max_user_watches").bytes().decode('utf8').replace('\n', '')
+        )
+
+        existing_user_watches = len([
+            fulllink for fulllink in (os.readlink(x) for x in glob.glob("/proc/*/fd/*")
+                if os.path.exists(x)) if "inotify" in fulllink
+        ])
+
+        if max_user_watches - existing_user_watches < number_of_watches_needed:
+            raise HitchEnvironmentException((
+                "You must increase max_user_watches in order to run your tests.\n\n"
+                "Number of inotify watches required: {}\n"
+                "Number of inotify watches left: {}\n"
+                "Max user watches: {}\n"
+                "How to temporarily raise number of watches:\n\n"
+                "  sudo echo 16384 > /proc/sys/fs/inotify/max_user_watches\n\n"
+                "How to permanently raise the number of watches:\n\n"
+                "  Add the line 'fs.inotify.max_user_watches=16384' to the end of /etc/sysctl.conf"
+            ).format(
+                number_of_watches_needed,
+                max_user_watches - existing_user_watches,
+                max_user_watches,
+            ))
 
 
 # TODO : rpm package availability.
