@@ -2,7 +2,6 @@ from IPython.terminal.embed import InteractiveShellEmbed
 from traitlets.config.loader import Config
 import functools
 import patoolib
-import requests
 import IPython
 import inspect
 import signal
@@ -87,45 +86,31 @@ def extract_archive(filename, directory):
     patoolib.extract_archive(filename, outdir=directory)
 
 
-def download_file(downloaded_file_name, url):
-    TOTAL_BLOCKS = 79
+class DownloadError(Exception):
+    pass
 
-    downloaded_file_name_temp = "{}.part".format(downloaded_file_name)
 
-    if os.path.exists(downloaded_file_name_temp):
-        os.remove(downloaded_file_name_temp)
+def download_file(downloaded_file_name, url, max_connections=2, max_concurrent=5):
+    """Download file to specified location."""
+    from commandlib import Command, CommandError, run
+    if os.path.exists(downloaded_file_name):
+        return
 
-    if not os.path.exists(downloaded_file_name):
-        with open(downloaded_file_name_temp, "wb") as downloaded_file_handle:
-            log("Downloading {}\n".format(url))
-            response = requests.get(url, stream=True)
-            total_length = response.headers.get('content-length')
-            previous_done = None
+    log("Downloading: {}\n".format(url))
+    aria2c = Command("aria2c")
+    aria2c = aria2c("--max-connection-per-server={}".format(max_connections))
+    aria2c = aria2c("--max-concurrent-downloads={}".format(max_concurrent))
 
-            if total_length is None: # no content length header
-                downloaded_file_handle.write(response.content)
-            else:
-                downloaded_bytes = 0
-                total_length = int(total_length)
-                for data in response.iter_content():
-                    downloaded_bytes += len(data)
-                    downloaded_file_handle.write(data)
-                    blocks_done = int(TOTAL_BLOCKS * float(downloaded_bytes) / float(total_length))
-                    percentage_done = "{:.1f}".format(
-                        100 * float(downloaded_bytes) / float(total_length)
-                    )
-                    if percentage_done != previous_done:
-                        previous_done = percentage_done
-                        log("\r{}% [{}{}]".format(
-                            percentage_done,
-                            '=' * blocks_done,
-                            ' ' * (TOTAL_BLOCKS - blocks_done))
-                        )
+    try:
+        if os.path.isabs(downloaded_file_name):
+            run(aria2c("--dir=/", "--out={}.part".format(downloaded_file_name), url))
+        else:
+            run(aria2c("--dir=.", "--out={}.part".format(downloaded_file_name), url))
+    except CommandError:
+        raise DownloadError("Failed to download {}. Re-running may fix the problem.".format(url))
 
-        log("\n")
-        shutil.move(downloaded_file_name_temp, downloaded_file_name)
-    else:
-        log("Downloaded : {} already found\n".format(downloaded_file_name))
+    shutil.move(downloaded_file_name + ".part", downloaded_file_name)
+
 
 def get_hitch_directory():
     """Get the hitch directory by working backwards from the virtualenv python."""
