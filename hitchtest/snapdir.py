@@ -36,11 +36,8 @@ def restore(destination, source, name=None):
     """Restore snapshots from one directory to another."""
     source = source + sep
     destination = destination + sep
-    
+
     snapdir = path.join(destination, ".snapdir")
-    
-    if not path.exists(snapdir):
-        raise RuntimeError("snapdir does not exist in destination directory")
 
     check_call(["rsync", "--progress", "--del", "--exclude=.snapdir", "-av", destination, source])
 
