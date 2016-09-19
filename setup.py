@@ -36,7 +36,7 @@ setup(name="hitchtest",
     url='https://hitchtest.readthedocs.org/',
     license='AGPL',
     install_requires=[
-        'click', 'jinja2', 'pyyaml', 'ipython', 'colorama', 'psutil',
+        'click', 'jinja2', 'pyyaml', 'ipython==4.2.1', 'colorama', 'psutil',
         'patool', 'pykwalify', 'unixpackage', 'path.py', 'commandlib',
     ],
     packages=find_packages(exclude=["docs", ]),
