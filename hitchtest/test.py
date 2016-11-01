@@ -20,7 +20,7 @@ class Test(object):
         self.preconditions = yaml_test.get('preconditions', {})
         self.tags = yaml_test.get('tags')
         self.features = yaml_test.get('features')
-        self.scenario = Scenario(yaml_test.get('scenario', []))
+        self.scenario = Scenario(yaml_test.get('scenario', []), underscore_case_steps=self.settings.get("underscore case steps", False))
 
         if re.compile("^(.*?)\:(.*?)$").match(self.engine) is None:
             raise RuntimeError("ERROR : engine should be of the form 'engine_filename.py:ClassName'")

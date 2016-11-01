@@ -7,8 +7,9 @@ class StepNotFound(Exception):
     pass
 
 class Step(object):
-    def __init__(self, yaml_step, index):
+    def __init__(self, yaml_step, index, underscore_case_steps=True):
         self.index = int(index)
+        self.underscore_case_steps = underscore_case_steps
         if type(yaml_step) is str:
             self.name = str(yaml_step)
             self.arguments = Arguments(None)
@@ -45,6 +46,9 @@ class Step(object):
             elif self.arguments.single_argument:
                 getattr(engine, self.underscore_case_name())(self.arguments.argument)
             else:
-                getattr(engine, self.underscore_case_name())(**self.arguments.pythonized_kwargs())
+                if self.underscore_case_steps:
+                    getattr(engine, self.underscore_case_name())(**self.arguments.pythonized_kwargs())
+                else:
+                    getattr(engine, self.underscore_case_name())(**self.arguments.kwargs)
         else:
             raise StepNotFound("Step with name '{}' not found in execution engine.".format(self.underscore_case_name()))
